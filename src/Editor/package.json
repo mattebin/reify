@@ -1,0 +1,15 @@
+{
+  "name": "com.reify.unity",
+  "version": "0.1.0",
+  "displayName": "Reify",
+  "description": "Structured state for Unity, for LLMs that reason. Editor-side bridge for the Reify MCP server.",
+  "unity": "2021.3",
+  "keywords": [ "mcp", "llm", "ai", "reify", "editor-tools" ],
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  },
+  "author": {
+    "name": "Matte",
+    "email": "nejjerxd@gmail.com"
+  }
+}

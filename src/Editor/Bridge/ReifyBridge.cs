@@ -1,0 +1,153 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UnityEditor;
+using UnityEngine;
+
+namespace Reify.Editor.Bridge
+{
+    /// <summary>
+    /// HTTP listener that the Reify MCP server talks to.
+    ///
+    /// Protocol: POST /tool with body {"tool":"name","args":{...}}. Response
+    /// is {"ok":true,"data":{...}} or {"ok":false,"error":{"code","message"}}.
+    /// See /docs/ARCH_DECISION.md § HTTP bridge contract for the full spec.
+    /// </summary>
+    [InitializeOnLoad]
+    internal static class ReifyBridge
+    {
+        private static readonly Dictionary<string, Func<JToken, Task<object>>> Handlers = new();
+
+        private static HttpListener _listener;
+        private static CancellationTokenSource _cts;
+        private static int _port;
+
+        static ReifyBridge()
+        {
+            // InitializeOnLoad fires on every domain reload — stop and restart.
+            EditorApplication.quitting += Stop;
+            AssemblyReloadEvents.beforeAssemblyReload += Stop;
+
+            Register("ping",       args => Tools.PingTool.Handle(args));
+            Register("scene-list", args => Tools.SceneListTool.Handle(args));
+
+            Start();
+        }
+
+        public static void Register(string name, Func<JToken, Task<object>> handler)
+            => Handlers[name] = handler;
+
+        private static void Start()
+        {
+            _port = ResolvePort();
+            _cts  = new CancellationTokenSource();
+
+            try
+            {
+                _listener = new HttpListener();
+                _listener.Prefixes.Add($"http://127.0.0.1:{_port}/");
+                _listener.Start();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[Reify] Failed to bind bridge to 127.0.0.1:{_port}. {ex.Message}");
+                return;
+            }
+
+            Debug.Log($"[Reify] Bridge listening on http://127.0.0.1:{_port}/");
+            _ = AcceptLoop(_cts.Token);
+        }
+
+        private static void Stop()
+        {
+            try { _cts?.Cancel(); } catch { /* ignore */ }
+            try { _listener?.Stop(); } catch { /* ignore */ }
+            _listener = null;
+        }
+
+        private static int ResolvePort()
+        {
+            var fromEnv = Environment.GetEnvironmentVariable("REIFY_BRIDGE_PORT");
+            return int.TryParse(fromEnv, out var p) && p > 0 ? p : 17777;
+        }
+
+        private static async Task AcceptLoop(CancellationToken ct)
+        {
+            while (!ct.IsCancellationRequested && _listener is { IsListening: true })
+            {
+                HttpListenerContext ctx;
+                try { ctx = await _listener.GetContextAsync(); }
+                catch { break; }
+
+                _ = Task.Run(() => Handle(ctx), ct);
+            }
+        }
+
+        private static async Task Handle(HttpListenerContext ctx)
+        {
+            try
+            {
+                if (ctx.Request.HttpMethod != "POST" || ctx.Request.Url?.AbsolutePath != "/tool")
+                {
+                    await WriteError(ctx, 404, "NOT_FOUND", "Only POST /tool is supported");
+                    return;
+                }
+
+                string body;
+                using (var reader = new StreamReader(ctx.Request.InputStream, Encoding.UTF8))
+                    body = await reader.ReadToEndAsync();
+
+                var envelope = JObject.Parse(body);
+                var tool = envelope.Value<string>("tool");
+                var args = envelope["args"];
+
+                if (string.IsNullOrEmpty(tool) || !Handlers.TryGetValue(tool, out var handler))
+                {
+                    await WriteError(ctx, 404, "UNKNOWN_TOOL", $"No handler for tool '{tool}'");
+                    return;
+                }
+
+                object data;
+                try
+                {
+                    data = await handler(args);
+                }
+                catch (Exception ex)
+                {
+                    await WriteError(ctx, 500, "TOOL_EXCEPTION", ex.Message);
+                    return;
+                }
+
+                var json = JsonConvert.SerializeObject(new { ok = true, data });
+                await WriteBody(ctx, 200, json);
+            }
+            catch (Exception ex)
+            {
+                try { await WriteError(ctx, 500, "BRIDGE_FAILURE", ex.Message); }
+                catch { /* connection already gone */ }
+            }
+        }
+
+        private static async Task WriteError(HttpListenerContext ctx, int status, string code, string message)
+        {
+            var json = JsonConvert.SerializeObject(new { ok = false, error = new { code, message } });
+            await WriteBody(ctx, status, json);
+        }
+
+        private static async Task WriteBody(HttpListenerContext ctx, int status, string json)
+        {
+            var bytes = Encoding.UTF8.GetBytes(json);
+            ctx.Response.StatusCode = status;
+            ctx.Response.ContentType = "application/json";
+            ctx.Response.ContentLength64 = bytes.Length;
+            await ctx.Response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+            ctx.Response.OutputStream.Close();
+        }
+    }
+}

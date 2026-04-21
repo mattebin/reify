@@ -9,7 +9,33 @@ desktop.ini
 *.swp
 *~
 
-# Python (for eventual server work)
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+
+# Unity (for a bundled test project; our own /src csproj is tracked)
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+MemoryCaptures/
+*.unityproj
+*.booproj
+*.pidb
+*.mdb.meta
+*.meta.meta
+sysinfo.txt
+*.apk
+*.unitypackage
+
+# Node (eventual CLI work)
+node_modules/
+.npm/
+
+# Python (if we ever add a companion tool)
 __pycache__/
 *.py[cod]
 .venv/
@@ -19,23 +45,9 @@ venv/
 .pytest_cache/
 .ruff_cache/
 
-# Node (for eventual CLI work)
-node_modules/
-.npm/
-dist/
-build/
-
-# Unity (if we end up bundling a test project)
-Library/
-Temp/
-Obj/
-Logs/
-*.csproj
-*.sln
-*.unityproj
-*.suo
-*.user
-
 # Local scratch
 .scratch/
 TODO.local.md
+
+# Upstream sync state
+.upstream-sync-state

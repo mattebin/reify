@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "reify": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "C:\\Users\\Matte\\Desktop\\Claude Brain\\reify\\src\\Server\\Reify.Server.csproj",
+        "--no-launch-profile",
+        "--"
+      ],
+      "env": {
+        "REIFY_BRIDGE_PORT": "17777"
+      }
+    }
+  }
+}
