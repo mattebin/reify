@@ -38,6 +38,23 @@ public static class ProjectInfoServerTools
     public static async Task<JsonElement> ProjectLayersTags(UnityClient unity, CancellationToken ct
     ) => await unity.CallAsync<JsonElement>("project-layers-tags", null, ct);
 
+    [McpServerTool(Name = "project-active-scene"), Description(
+        "Return the currently active Scene's metadata: name, asset path, " +
+        "build_index, is_loaded, is_dirty, root_count + root_gameobjects, " +
+        "total gameobject_count (recursive). Cheap — use when you need the " +
+        "active-scene identity without walking the full hierarchy.")]
+    public static async Task<JsonElement> ProjectActiveScene(UnityClient unity, CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>("project-active-scene", null, ct);
+
+    [McpServerTool(Name = "project-quality-settings"), Description(
+        "Enumerate every Quality Level with its shadow distance, shadow " +
+        "resolution + cascades, VSync count, anti-aliasing, pixel light " +
+        "count, texture quality (mipmap limit), anisotropic filtering, " +
+        "soft particles flag, LOD bias. Identifies current_level_index. " +
+        "Per-platform overrides deferred to a future tool.")]
+    public static async Task<JsonElement> ProjectQualitySettings(UnityClient unity, CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>("project-quality-settings", null, ct);
+
     [McpServerTool(Name = "project-render-pipeline-state"), Description(
         "Philosophy tool. Full structured diagnostic of the active render " +
         "pipeline. For URP: MSAA sample count, HDR, render scale, shadow " +

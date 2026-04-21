@@ -283,5 +283,89 @@ namespace Reify.Editor.Tools
             foreach (var s in scenes) if (s.enabled) n++;
             return n;
         }
+
+        // ---------- project-active-scene ----------
+        public static Task<object> ActiveScene(JToken _)
+        {
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                var s = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+                var roots = s.IsValid() && s.isLoaded ? s.GetRootGameObjects() : Array.Empty<GameObject>();
+                var goCount = 0;
+                foreach (var root in roots) goCount += CountGameObjects(root.transform);
+
+                var rootNames = new string[roots.Length];
+                for (var i = 0; i < roots.Length; i++) rootNames[i] = roots[i].name;
+
+                return new
+                {
+                    name        = s.name,
+                    path        = s.path,
+                    build_index = s.buildIndex,
+                    is_loaded   = s.isLoaded,
+                    is_dirty    = s.isDirty,
+                    is_valid    = s.IsValid(),
+                    root_count  = roots.Length,
+                    root_gameobjects = rootNames,
+                    gameobject_count = goCount,
+                    read_at_utc = DateTime.UtcNow.ToString("o"),
+                    frame       = (long)Time.frameCount
+                };
+            });
+        }
+
+        private static int CountGameObjects(Transform t)
+        {
+            var n = 1;
+            for (var i = 0; i < t.childCount; i++) n += CountGameObjects(t.GetChild(i));
+            return n;
+        }
+
+        // ---------- project-quality-settings ----------
+        public static Task<object> QualitySettings(JToken _)
+        {
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                var names   = UnityEngine.QualitySettings.names;
+                var current = UnityEngine.QualitySettings.GetQualityLevel();
+                var levels  = new List<object>(names.Length);
+
+                for (var i = 0; i < names.Length; i++)
+                {
+                    // Some settings are current-level-scoped. SetQualityLevel
+                    // without applyExpensiveChanges is cheap.
+                    UnityEngine.QualitySettings.SetQualityLevel(i, applyExpensiveChanges: false);
+                    levels.Add(new
+                    {
+                        index                  = i,
+                        name                   = names[i],
+                        shadow_distance        = UnityEngine.QualitySettings.shadowDistance,
+                        shadow_resolution      = UnityEngine.QualitySettings.shadowResolution.ToString(),
+                        shadow_cascades        = UnityEngine.QualitySettings.shadowCascades,
+                        vsync_count            = UnityEngine.QualitySettings.vSyncCount,
+                        anti_aliasing          = UnityEngine.QualitySettings.antiAliasing,
+                        pixel_light_count      = UnityEngine.QualitySettings.pixelLightCount,
+                        texture_quality        = UnityEngine.QualitySettings.globalTextureMipmapLimit,
+                        anisotropic_filtering  = UnityEngine.QualitySettings.anisotropicFiltering.ToString(),
+                        realtime_reflection_probes = UnityEngine.QualitySettings.realtimeReflectionProbes,
+                        soft_particles         = UnityEngine.QualitySettings.softParticles,
+                        lod_bias               = UnityEngine.QualitySettings.lodBias,
+                        maximum_lod_level      = UnityEngine.QualitySettings.maximumLODLevel
+                    });
+                }
+                UnityEngine.QualitySettings.SetQualityLevel(current, applyExpensiveChanges: false);
+
+                return new
+                {
+                    current_level_index = current,
+                    current_level_name  = names[current],
+                    level_count         = names.Length,
+                    levels              = levels.ToArray(),
+                    note                = "Per-platform overrides are not enumerated here — QualitySettings.IsPlatformIncluded is platform-specific; defer to a focused tool if needed.",
+                    read_at_utc         = DateTime.UtcNow.ToString("o"),
+                    frame               = (long)Time.frameCount
+                };
+            });
+        }
     }
 }
