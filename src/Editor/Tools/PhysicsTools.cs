@@ -20,11 +20,12 @@ namespace Reify.Editor.Tools
         {
             var (origin, dir) = ReadRay(args);
             var max        = args?.Value<float?>("max_distance") ?? Mathf.Infinity;
-            var mask       = ReadLayerMask(args?["layer_mask"]);
+            var maskTok    = args?["layer_mask"];
             var qti        = ReadQti(args?.Value<string>("query_trigger_interaction"));
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
+                var mask = ReadLayerMask(maskTok);
                 var hit = new RaycastHit();
                 var ok  = Physics.Raycast(origin, dir, out hit, max, mask, qti);
                 return new
@@ -43,11 +44,12 @@ namespace Reify.Editor.Tools
         {
             var (origin, dir) = ReadRay(args);
             var max        = args?.Value<float?>("max_distance") ?? Mathf.Infinity;
-            var mask       = ReadLayerMask(args?["layer_mask"]);
+            var maskTok    = args?["layer_mask"];
             var qti        = ReadQti(args?.Value<string>("query_trigger_interaction"));
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
+                var mask = ReadLayerMask(maskTok);
                 var hits = Physics.RaycastAll(origin, dir, max, mask, qti);
                 Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
                 var dtos = new object[hits.Length];
@@ -68,11 +70,12 @@ namespace Reify.Editor.Tools
             var (origin, dir) = ReadRay(args);
             var radius     = args?.Value<float?>("radius")       ?? throw new ArgumentException("radius is required.");
             var max        = args?.Value<float?>("max_distance") ?? Mathf.Infinity;
-            var mask       = ReadLayerMask(args?["layer_mask"]);
+            var maskTok    = args?["layer_mask"];
             var qti        = ReadQti(args?.Value<string>("query_trigger_interaction"));
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
+                var mask = ReadLayerMask(maskTok);
                 var hit = new RaycastHit();
                 var ok  = Physics.SphereCast(origin, radius, dir, out hit, max, mask, qti);
                 return new
@@ -91,11 +94,12 @@ namespace Reify.Editor.Tools
         {
             var pos    = ReadVec3Required(args?["position"], "position");
             var radius = args?.Value<float?>("radius") ?? throw new ArgumentException("radius is required.");
-            var mask   = ReadLayerMask(args?["layer_mask"]);
+            var maskTok    = args?["layer_mask"];
             var qti    = ReadQti(args?.Value<string>("query_trigger_interaction"));
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
+                var mask = ReadLayerMask(maskTok);
                 var cols = Physics.OverlapSphere(pos, radius, mask, qti);
                 var dtos = new object[cols.Length];
                 for (var i = 0; i < cols.Length; i++) dtos[i] = ColliderDto(cols[i]);
@@ -116,11 +120,12 @@ namespace Reify.Editor.Tools
             var center       = ReadVec3Required(args?["center"],       "center");
             var halfExtents  = ReadVec3Required(args?["half_extents"], "half_extents");
             var rot          = ReadQuat(args?["orientation"]) ?? Quaternion.identity;
-            var mask         = ReadLayerMask(args?["layer_mask"]);
+            var maskTok      = args?["layer_mask"];
             var qti          = ReadQti(args?.Value<string>("query_trigger_interaction"));
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
+                var mask = ReadLayerMask(maskTok);
                 var cols = Physics.OverlapBox(center, halfExtents, rot, mask, qti);
                 var dtos = new object[cols.Length];
                 for (var i = 0; i < cols.Length; i++) dtos[i] = ColliderDto(cols[i]);

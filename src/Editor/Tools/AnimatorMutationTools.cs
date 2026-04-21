@@ -22,6 +22,11 @@ namespace Reify.Editor.Tools
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
                 var animator = Resolve(id, goPath);
+                if (animator.runtimeAnimatorController == null)
+                    throw new InvalidOperationException(
+                        "Animator has no RuntimeAnimatorController — no parameters exist. " +
+                        "Assign a controller before setting parameters.");
+
                 var p = FindParameter(animator, paramName);
                 if (p == null)
                 {
