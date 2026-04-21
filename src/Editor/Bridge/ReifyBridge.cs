@@ -34,8 +34,11 @@ namespace Reify.Editor.Bridge
             EditorApplication.quitting += Stop;
             AssemblyReloadEvents.beforeAssemblyReload += Stop;
 
-            Register("ping",       args => Tools.PingTool.Handle(args));
-            Register("scene-list", args => Tools.SceneListTool.Handle(args));
+            Register("ping",         args => Tools.PingTool.Handle(args));
+            Register("scene-list",   args => Tools.SceneListTool.Handle(args));
+            Register("scene-open",   args => Tools.SceneOpenTool.Handle(args));
+            Register("scene-save",   args => Tools.SceneSaveTool.Handle(args));
+            Register("scene-create", args => Tools.SceneCreateTool.Handle(args));
 
             Start();
         }
