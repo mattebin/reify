@@ -113,6 +113,8 @@ namespace Reify.Editor.Bridge
             Register("animator-crossfade",     args => Tools.AnimatorMutationTools.CrossFade(args));
             Register("animator-play",          args => Tools.AnimatorMutationTools.Play(args));
 
+            Register("domain-reload-status", args => Tools.DomainReloadStatusTool.Handle(args));
+
             Start();
         }
 
