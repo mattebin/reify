@@ -58,6 +58,18 @@ namespace Reify.Editor.Tools
         }
 
         /// <summary>
+        /// Returns a Unity Object's instance id, wrapping the Unity-6
+        /// CS0618 on GetInstanceID() that we can't migrate off of while the
+        /// package supports 2021.3 (GetEntityId doesn't exist there).
+        /// </summary>
+        public static int InstanceIdOf(Object o)
+        {
+            #pragma warning disable CS0618
+            return o.GetInstanceID();
+            #pragma warning restore CS0618
+        }
+
+        /// <summary>
         /// Compute the full scene path of a GameObject, e.g. "Parent/Child/Leaf".
         /// </summary>
         public static string PathOf(GameObject go)

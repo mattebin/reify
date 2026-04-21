@@ -61,7 +61,7 @@ namespace Reify.Editor.Tools
             {
                 gameobject = new
                 {
-                    instance_id = go.GetInstanceID(),
+                    instance_id = GameObjectResolver.InstanceIdOf(go),
                     name        = go.name,
                     path        = GameObjectResolver.PathOf(go)
                 },
@@ -77,7 +77,7 @@ namespace Reify.Editor.Tools
             var baseDesc = new Dictionary<string, object>
             {
                 ["type_fqn"]    = c.GetType().FullName,
-                ["instance_id"] = c.GetInstanceID(),
+                ["instance_id"] = GameObjectResolver.InstanceIdOf(c),
                 ["enabled"]     = c is Behaviour b ? b.enabled : (object)null
             };
 
@@ -124,7 +124,7 @@ namespace Reify.Editor.Tools
                     return p.objectReferenceValue == null ? null : new
                     {
                         type_fqn    = p.objectReferenceValue.GetType().FullName,
-                        instance_id = p.objectReferenceValue.GetInstanceID(),
+                        instance_id = GameObjectResolver.InstanceIdOf(p.objectReferenceValue),
                         name        = p.objectReferenceValue.name
                     };
                 case SerializedPropertyType.LayerMask:  return p.intValue;

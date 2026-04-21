@@ -40,7 +40,7 @@ namespace Reify.Editor.Tools
                     added = new
                     {
                         type_fqn    = type.FullName,
-                        instance_id = component.GetInstanceID(),
+                        instance_id = GameObjectResolver.InstanceIdOf(component),
                         gameobject  = GameObjectDto.Build(go, includeComponents: true)
                     },
                     read_at_utc = DateTime.UtcNow.ToString("o"),

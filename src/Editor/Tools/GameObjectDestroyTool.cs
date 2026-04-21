@@ -35,7 +35,7 @@ namespace Reify.Editor.Tools
 
                 var snapshot = new
                 {
-                    instance_id = go.GetInstanceID(),
+                    instance_id = GameObjectResolver.InstanceIdOf(go),
                     name        = go.name,
                     path        = GameObjectResolver.PathOf(go)
                 };

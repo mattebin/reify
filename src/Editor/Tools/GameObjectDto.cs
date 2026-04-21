@@ -33,7 +33,7 @@ namespace Reify.Editor.Tools
                     list.Add(new
                     {
                         type        = c.GetType().FullName,
-                        instance_id = c.GetInstanceID()
+                        instance_id = GameObjectResolver.InstanceIdOf(c)
                     });
                 }
                 components = list.ToArray();
@@ -41,7 +41,7 @@ namespace Reify.Editor.Tools
 
             return new
             {
-                instance_id         = go.GetInstanceID(),
+                instance_id         = GameObjectResolver.InstanceIdOf(go),
                 name                = go.name,
                 path                = GameObjectResolver.PathOf(go),
                 parent_path         = t.parent != null ? GameObjectResolver.PathOf(t.parent.gameObject) : "",
