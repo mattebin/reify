@@ -40,24 +40,28 @@ namespace Reify.Editor.Tools
                 if (a.speed <= 0f)
                     warnings.Add($"Agent speed is {a.speed:F3} — won't move even with a valid path.");
 
+                // Several NavMeshAgent properties (isStopped, remainingDistance,
+                // destination, nextPosition, etc.) log Unity errors when the
+                // agent isn't on a NavMesh. Guard with a single check.
+                var onMesh = a.isOnNavMesh;
                 return new
                 {
                     instance_id            = GameObjectResolver.InstanceIdOf(a),
                     gameobject_instance_id = GameObjectResolver.InstanceIdOf(a.gameObject),
                     gameobject_path        = GameObjectResolver.PathOf(a.gameObject),
                     enabled                = a.enabled,
-                    is_on_nav_mesh         = a.isOnNavMesh,
-                    is_stopped             = a.isStopped,
-                    is_path_stale          = a.isPathStale,
-                    has_path               = a.hasPath,
-                    path_pending           = a.pathPending,
-                    path_status            = a.pathStatus.ToString(),
+                    is_on_nav_mesh         = onMesh,
+                    is_stopped             = onMesh ? (bool?)a.isStopped : null,
+                    is_path_stale          = onMesh ? (bool?)a.isPathStale : null,
+                    has_path               = onMesh && a.hasPath,
+                    path_pending           = onMesh ? (bool?)a.pathPending : null,
+                    path_status            = onMesh ? a.pathStatus.ToString() : null,
                     position               = V(a.transform.position),
                     velocity               = V(a.velocity),
-                    desired_velocity       = V(a.desiredVelocity),
-                    destination            = a.hasPath ? (object)V(a.destination) : null,
-                    next_position          = V(a.nextPosition),
-                    remaining_distance     = a.remainingDistance,
+                    desired_velocity       = onMesh ? (object)V(a.desiredVelocity) : null,
+                    destination            = onMesh && a.hasPath ? (object)V(a.destination) : null,
+                    next_position          = onMesh ? (object)V(a.nextPosition) : null,
+                    remaining_distance     = onMesh ? (float?)a.remainingDistance : null,
                     stopping_distance      = a.stoppingDistance,
                     speed                  = a.speed,
                     angular_speed          = a.angularSpeed,
@@ -158,6 +162,10 @@ namespace Reify.Editor.Tools
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
                 var a = ResolveAgent(args);
+                if (!a.isOnNavMesh)
+                    throw new InvalidOperationException(
+                        "Agent is not on a NavMesh — isStopped/Stop/ResetPath cannot be called. " +
+                        "Use nav-agent-warp first to place the agent on a baked NavMesh.");
                 var before = new { is_stopped = a.isStopped, has_path = a.hasPath };
                 a.isStopped = true;
                 if (clearPath && a.hasPath) a.ResetPath();
@@ -182,6 +190,10 @@ namespace Reify.Editor.Tools
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
                 var a = ResolveAgent(args);
+                if (!a.isOnNavMesh)
+                    throw new InvalidOperationException(
+                        "Agent is not on a NavMesh — isStopped/Resume cannot be called. " +
+                        "Use nav-agent-warp first to place the agent on a baked NavMesh.");
                 var before = new { is_stopped = a.isStopped };
                 a.isStopped = false;
                 return new
