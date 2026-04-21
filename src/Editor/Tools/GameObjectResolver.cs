@@ -38,7 +38,7 @@ namespace Reify.Editor.Tools
         /// <summary>
         /// Resolve any Unity object by instance id. Throws if missing.
         /// </summary>
-        public static Object ByInstanceId(int instanceId)
+        public static UnityEngine.Object ByInstanceId(int instanceId)
         {
             #pragma warning disable CS0618
             return EditorUtility.InstanceIDToObject(instanceId);
@@ -50,7 +50,7 @@ namespace Reify.Editor.Tools
         /// CS0618 on GetInstanceID() that we can't migrate off of while the
         /// package supports 2021.3 (GetEntityId doesn't exist there).
         /// </summary>
-        public static int InstanceIdOf(Object o)
+        public static int InstanceIdOf(UnityEngine.Object o)
         {
             #pragma warning disable CS0618
             return o.GetInstanceID();
