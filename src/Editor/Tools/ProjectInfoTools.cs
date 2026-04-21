@@ -15,6 +15,7 @@ namespace Reify.Editor.Tools
     internal static class ProjectInfoTools
     {
         // ---------- project-info ----------
+        [ReifyTool("project-info")]
         public static Task<object> Info(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -56,6 +57,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- project-packages ----------
+        [ReifyTool("project-packages")]
         public static Task<object> Packages(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -87,6 +89,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- project-build-settings ----------
+        [ReifyTool("project-build-settings")]
         public static Task<object> BuildSettings(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -119,6 +122,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- project-layers-tags ----------
+        [ReifyTool("project-layers-tags")]
         public static Task<object> LayersTags(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -164,6 +168,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- project-render-pipeline-state (philosophy tool) ----------
+        [ReifyTool("project-render-pipeline-state")]
         public static Task<object> RenderPipelineState(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -285,6 +290,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- project-active-scene ----------
+        [ReifyTool("project-active-scene")]
         public static Task<object> ActiveScene(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -322,6 +328,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- project-quality-settings ----------
+        [ReifyTool("project-quality-settings")]
         public static Task<object> QualitySettings(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>

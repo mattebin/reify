@@ -9,6 +9,7 @@ namespace Reify.Editor.Tools
 {
     internal static class SceneSaveTool
     {
+        [ReifyTool("scene-save")]
         public static Task<object> Handle(JToken args)
         {
             var path       = args?.Value<string>("path");

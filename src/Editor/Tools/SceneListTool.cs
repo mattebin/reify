@@ -11,6 +11,7 @@ namespace Reify.Editor.Tools
 {
     internal static class SceneListTool
     {
+        [ReifyTool("scene-list")]
         public static Task<object> Handle(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>

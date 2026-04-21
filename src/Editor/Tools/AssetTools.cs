@@ -16,6 +16,7 @@ namespace Reify.Editor.Tools
     internal static class AssetTools
     {
         // ---------- asset-find ----------
+        [ReifyTool("asset-find")]
         public static Task<object> Find(JToken args)
         {
             var name = args?.Value<string>("name");
@@ -64,6 +65,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- asset-create ----------
+        [ReifyTool("asset-create")]
         public static Task<object> Create(JToken args)
         {
             var kind      = args?.Value<string>("kind")      ?? throw new ArgumentException("kind is required ('folder', 'material', 'scriptable_object').");
@@ -122,6 +124,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- asset-delete ----------
+        [ReifyTool("asset-delete")]
         public static Task<object> Delete(JToken args)
         {
             var path        = args?.Value<string>("path") ?? throw new ArgumentException("path is required.");
@@ -167,6 +170,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- asset-get ----------
+        [ReifyTool("asset-get")]
         public static Task<object> Get(JToken args)
         {
             var path              = args?.Value<string>("path") ?? throw new ArgumentException("path is required.");
@@ -229,6 +233,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- asset-rename ----------
+        [ReifyTool("asset-rename")]
         public static Task<object> Rename(JToken args)
         {
             var path    = args?.Value<string>("path")     ?? throw new ArgumentException("path is required.");
@@ -254,6 +259,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- asset-move ----------
+        [ReifyTool("asset-move")]
         public static Task<object> Move(JToken args)
         {
             var from = args?.Value<string>("from") ?? throw new ArgumentException("from is required.");

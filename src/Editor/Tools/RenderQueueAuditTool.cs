@@ -17,6 +17,7 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class RenderQueueAuditTool
     {
+        [ReifyTool("render-queue-audit")]
         public static Task<object> Handle(JToken args)
         {
             var scenePath       = args?.Value<string>("scene_path");

@@ -9,6 +9,7 @@ namespace Reify.Editor.Tools
 {
     internal static class GameObjectDestroyTool
     {
+        [ReifyTool("gameobject-destroy")]
         public static Task<object> Handle(JToken args)
         {
             var path       = args?.Value<string>("path");

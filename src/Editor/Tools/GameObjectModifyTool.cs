@@ -9,6 +9,7 @@ namespace Reify.Editor.Tools
 {
     internal static class GameObjectModifyTool
     {
+        [ReifyTool("gameobject-modify")]
         public static Task<object> Handle(JToken args)
         {
             var path          = args?.Value<string>("path")            ?? throw new ArgumentException("path is required");

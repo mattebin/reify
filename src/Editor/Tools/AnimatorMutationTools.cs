@@ -11,6 +11,7 @@ namespace Reify.Editor.Tools
     internal static class AnimatorMutationTools
     {
         // ---------- animator-parameter-set ----------
+        [ReifyTool("animator-parameter-set")]
         public static Task<object> ParameterSet(JToken args)
         {
             var id       = args?["animator_instance_id"]?.Type == JTokenType.Integer
@@ -111,6 +112,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- animator-crossfade ----------
+        [ReifyTool("animator-crossfade")]
         public static Task<object> CrossFade(JToken args)
         {
             var id       = args?["animator_instance_id"]?.Type == JTokenType.Integer
@@ -146,6 +148,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- animator-play ----------
+        [ReifyTool("animator-play")]
         public static Task<object> Play(JToken args)
         {
             var id       = args?["animator_instance_id"]?.Type == JTokenType.Integer

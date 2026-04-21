@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,93 +35,51 @@ namespace Reify.Editor.Bridge
             EditorApplication.quitting += Stop;
             AssemblyReloadEvents.beforeAssemblyReload += Stop;
 
-            Register("ping",         args => Tools.PingTool.Handle(args));
-            Register("scene-list",   args => Tools.SceneListTool.Handle(args));
-            Register("scene-open",   args => Tools.SceneOpenTool.Handle(args));
-            Register("scene-save",   args => Tools.SceneSaveTool.Handle(args));
-            Register("scene-create", args => Tools.SceneCreateTool.Handle(args));
-            Register("mesh-native-bounds", args => Tools.MeshNativeBoundsTool.Handle(args));
-            Register("gameobject-create",  args => Tools.GameObjectCreateTool.Handle(args));
-            Register("gameobject-find",    args => Tools.GameObjectFindTool.Handle(args));
-            Register("gameobject-destroy", args => Tools.GameObjectDestroyTool.Handle(args));
-            Register("gameobject-modify",  args => Tools.GameObjectModifyTool.Handle(args));
-            Register("component-add",          args => Tools.ComponentAddTool.Handle(args));
-            Register("component-get",          args => Tools.ComponentGetTool.Handle(args));
-            Register("component-modify",       args => Tools.ComponentModifyTool.Handle(args));
-            Register("component-remove",       args => Tools.ComponentRemoveTool.Handle(args));
-            Register("component-set-property", args => Tools.ComponentSetPropertyTool.Handle(args));
-
-            Register("asset-find",   args => Tools.AssetTools.Find(args));
-            Register("asset-create", args => Tools.AssetTools.Create(args));
-            Register("asset-delete", args => Tools.AssetTools.Delete(args));
-            Register("asset-get",    args => Tools.AssetTools.Get(args));
-            Register("asset-rename", args => Tools.AssetTools.Rename(args));
-            Register("asset-move",   args => Tools.AssetTools.Move(args));
-
-            Register("prefab-create",           args => Tools.PrefabTools.Create(args));
-            Register("prefab-instantiate",      args => Tools.PrefabTools.Instantiate(args));
-            Register("prefab-open",             args => Tools.PrefabTools.Open(args));
-            Register("prefab-close",            args => Tools.PrefabTools.Close(args));
-            Register("prefab-get-overrides",    args => Tools.PrefabTools.GetOverrides(args));
-            Register("prefab-apply-overrides",  args => Tools.PrefabTools.ApplyOverrides(args));
-            Register("prefab-revert-overrides", args => Tools.PrefabTools.RevertOverrides(args));
-
-            Register("material-inspect", args => Tools.MaterialInspectTool.Handle(args));
-
-            Register("play-mode-enter",  args => Tools.PlayModeTools.Enter(args));
-            Register("play-mode-exit",   args => Tools.PlayModeTools.Exit(args));
-            Register("play-mode-pause",  args => Tools.PlayModeTools.Pause(args));
-            Register("play-mode-resume", args => Tools.PlayModeTools.Resume(args));
-            Register("play-mode-step",   args => Tools.PlayModeTools.Step(args));
-            Register("play-mode-status", args => Tools.PlayModeTools.StatusTool(args));
-
-            Register("scene-hierarchy", args => Tools.SceneHierarchyTools.Hierarchy(args));
-            Register("scene-query",     args => Tools.SceneHierarchyTools.Query(args));
-            Register("scene-stats",     args => Tools.SceneHierarchyTools.Stats(args));
-
-            Register("console-log-read",               args => Tools.ConsoleLogTools.Read(args));
-            Register("console-log-clear",              args => Tools.ConsoleLogTools.Clear(args));
-            Register("console-log-subscribe-snapshot", args => Tools.ConsoleLogTools.SubscribeSnapshot(args));
-
-            Register("editor-menu-execute",   args => Tools.EditorOpsTools.MenuExecute(args));
-            Register("editor-undo",           args => Tools.EditorOpsTools.Undo(args));
-            Register("editor-redo",           args => Tools.EditorOpsTools.Redo(args));
-            Register("editor-undo-history",   args => Tools.EditorOpsTools.UndoHistory(args));
-            Register("editor-selection-get",  args => Tools.EditorOpsTools.SelectionGet(args));
-            Register("editor-selection-set",  args => Tools.EditorOpsTools.SelectionSet(args));
-
-            Register("project-info",                  args => Tools.ProjectInfoTools.Info(args));
-            Register("project-packages",              args => Tools.ProjectInfoTools.Packages(args));
-            Register("project-build-settings",        args => Tools.ProjectInfoTools.BuildSettings(args));
-            Register("project-layers-tags",           args => Tools.ProjectInfoTools.LayersTags(args));
-            Register("project-render-pipeline-state", args => Tools.ProjectInfoTools.RenderPipelineState(args));
-            Register("project-active-scene",          args => Tools.ProjectInfoTools.ActiveScene(args));
-            Register("project-quality-settings",      args => Tools.ProjectInfoTools.QualitySettings(args));
-
-            Register("animator-state",     args => Tools.AnimatorStateTool.Handle(args));
-            Register("render-queue-audit", args => Tools.RenderQueueAuditTool.Handle(args));
-            Register("asset-dependents",    args => Tools.AssetDependentsTool.Handle(args));
-            Register("lighting-diagnostic", args => Tools.LightingDiagnosticTool.Handle(args));
-
-            Register("physics-raycast",        args => Tools.PhysicsTools.Raycast(args));
-            Register("physics-raycast-all",    args => Tools.PhysicsTools.RaycastAll(args));
-            Register("physics-spherecast",     args => Tools.PhysicsTools.SphereCast(args));
-            Register("physics-overlap-sphere", args => Tools.PhysicsTools.OverlapSphere(args));
-            Register("physics-overlap-box",    args => Tools.PhysicsTools.OverlapBox(args));
-            Register("physics-settings",       args => Tools.PhysicsTools.Settings(args));
-
-            Register("animator-parameter-set", args => Tools.AnimatorMutationTools.ParameterSet(args));
-            Register("animator-crossfade",     args => Tools.AnimatorMutationTools.CrossFade(args));
-            Register("animator-play",          args => Tools.AnimatorMutationTools.Play(args));
-
-            Register("domain-reload-status", args => Tools.DomainReloadStatusTool.Handle(args));
-            Register("persistence-status",   args => Tools.PersistenceStatusTool.Handle(args));
+            AutoRegister();
 
             Start();
         }
 
-        public static void Register(string name, Func<JToken, Task<object>> handler)
-            => Handlers[name] = handler;
+        /// <summary>
+        /// Scan the containing assembly for static methods decorated with
+        /// <see cref="ReifyToolAttribute"/> and register them. This is the
+        /// single source of truth for tool registration — per-tool files
+        /// self-register by attribute, no manual list in this file.
+        /// </summary>
+        private static void AutoRegister()
+        {
+            var sig = typeof(Func<JToken, Task<object>>);
+            var assembly = typeof(ReifyBridge).Assembly;
+            var duplicates = new List<string>();
+
+            foreach (var type in assembly.GetTypes())
+            {
+                MethodInfo[] methods;
+                try { methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic); }
+                catch { continue; }
+
+                foreach (var method in methods)
+                {
+                    var attr = method.GetCustomAttribute<ReifyToolAttribute>();
+                    if (attr == null) continue;
+
+                    Delegate d;
+                    try { d = Delegate.CreateDelegate(sig, method); }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[Reify] Tool '{attr.Name}' on {type.FullName}.{method.Name} " +
+                                       $"has wrong signature (expected static Task<object>(JToken)): {ex.Message}");
+                        continue;
+                    }
+
+                    if (Handlers.ContainsKey(attr.Name)) duplicates.Add(attr.Name);
+                    Handlers[attr.Name] = (Func<JToken, Task<object>>)d;
+                }
+            }
+
+            if (duplicates.Count > 0)
+                Debug.LogError($"[Reify] Duplicate tool name(s): {string.Join(", ", duplicates)}");
+        }
 
         private static void Start()
         {

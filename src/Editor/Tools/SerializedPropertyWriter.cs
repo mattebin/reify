@@ -75,13 +75,21 @@ namespace Reify.Editor.Tools
                     var iid = value["instance_id"]?.Value<int?>();
                     if (iid.HasValue)
                     {
-                        p.objectReferenceValue = GameObjectResolver.ByInstanceId(iid.Value);
+                        var resolved = GameObjectResolver.ByInstanceId(iid.Value);
+                        if (resolved == null)
+                            throw new InvalidOperationException(
+                                $"No Unity object with instance_id {iid.Value} for ObjectReference property '{p.propertyPath}'.");
+                        p.objectReferenceValue = resolved;
                         break;
                     }
                     var path = value["asset_path"]?.Value<string>();
                     if (!string.IsNullOrEmpty(path))
                     {
-                        p.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                        var resolved = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                        if (resolved == null)
+                            throw new InvalidOperationException(
+                                $"No asset found at path '{path}' for ObjectReference property '{p.propertyPath}'.");
+                        p.objectReferenceValue = resolved;
                         break;
                     }
                     throw new ArgumentException(

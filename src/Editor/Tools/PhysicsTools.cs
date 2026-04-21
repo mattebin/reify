@@ -16,6 +16,7 @@ namespace Reify.Editor.Tools
     internal static class PhysicsTools
     {
         // ---------- physics-raycast ----------
+        [ReifyTool("physics-raycast")]
         public static Task<object> Raycast(JToken args)
         {
             var (origin, dir) = ReadRay(args);
@@ -40,6 +41,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- physics-raycast-all ----------
+        [ReifyTool("physics-raycast-all")]
         public static Task<object> RaycastAll(JToken args)
         {
             var (origin, dir) = ReadRay(args);
@@ -65,6 +67,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- physics-spherecast ----------
+        [ReifyTool("physics-spherecast")]
         public static Task<object> SphereCast(JToken args)
         {
             var (origin, dir) = ReadRay(args);
@@ -90,6 +93,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- physics-overlap-sphere ----------
+        [ReifyTool("physics-overlap-sphere")]
         public static Task<object> OverlapSphere(JToken args)
         {
             var pos    = ReadVec3Required(args?["position"], "position");
@@ -115,6 +119,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- physics-overlap-box ----------
+        [ReifyTool("physics-overlap-box")]
         public static Task<object> OverlapBox(JToken args)
         {
             var center       = ReadVec3Required(args?["center"],       "center");
@@ -141,6 +146,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- physics-settings ----------
+        [ReifyTool("physics-settings")]
         public static Task<object> Settings(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>

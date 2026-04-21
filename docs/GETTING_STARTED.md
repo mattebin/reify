@@ -1,28 +1,22 @@
 # Getting started
 
-Recipe for going from a clean machine to "Claude Code can `ping` your Unity
-Editor". If you are future-me reading this after a week, follow the steps
-in order — each one tells you the verification command to run before
-moving to the next.
+This is the bootstrap path for getting `reify` talking to a Unity Editor and a
+Claude Code MCP client.
 
----
+The local `reify` worktree now contains many more tools than this guide uses.
+This document intentionally keeps the smoke test cheap by using `ping` and
+`scene-list` as the first proof that the bridge is alive.
 
 ## Prerequisites
 
-| Requirement              | Verify with                       | If missing                                                              |
-|--------------------------|-----------------------------------|-------------------------------------------------------------------------|
-| .NET 8 SDK               | `dotnet --list-sdks`              | `winget install Microsoft.DotNet.SDK.8`                                 |
-| Unity Editor 2022.3 LTS+ | open Unity Hub, check installs    | install from Unity Hub                                                  |
-| Claude Code CLI          | `claude --version`                | follow https://docs.claude.com/claude-code/getting-started               |
-| Git                      | `git --version`                   | `winget install Git.Git`                                                |
+- .NET 8 SDK
+- Unity Editor 2022.3+ (Unity `6000.4.3f1` is known-good locally)
+- Claude Code CLI
+- Git
 
-The port `17777` must be free on localhost. Pick another by setting
-`REIFY_BRIDGE_PORT` in both the Unity env and the Claude Code MCP config
-if it is not.
+Default bridge port: `17777`
 
----
-
-## Step 1 — Build the Reify server
+## Step 1 — Build the server
 
 ```powershell
 cd "C:\Users\Matte\Desktop\Claude Brain\reify\src"
@@ -30,27 +24,19 @@ dotnet restore
 dotnet build -c Release
 ```
 
-**Verify:** `dotnet build -c Release` ends with `Build succeeded.` and no
-errors. You should see `bin\Release\net8.0\reify-server.dll` produced under
-`src\Server\`.
+Expected output:
 
-For a standalone `.exe`:
+- `src\Server\bin\Release\net8.0\reify-server.dll`
+
+Optional published executable:
 
 ```powershell
 dotnet publish Server\Reify.Server.csproj -c Release --no-self-contained
 ```
 
-That writes `bin\Release\net8.0\publish\reify-server.exe`. Use
-`client-config/claude-code.mcp.published.json` if you want to point Claude
-Code at that `.exe` directly instead of invoking `dotnet run`.
-
----
-
 ## Step 2 — Install the Unity package into a project
 
-Open any Unity project (a blank 3D URP project is fine for smoke-testing).
-In `Packages/manifest.json` add a local package reference to the Reify
-Editor source folder:
+Add the local package to a Unity project's `Packages/manifest.json`:
 
 ```json
 {
@@ -61,61 +47,40 @@ Editor source folder:
 }
 ```
 
-(Forward slashes in the path — Unity's package manifest parses
-backslashes as escape characters.)
+After Unity recompiles, the Console should show:
 
-Save the file. Unity will re-import and compile the package.
-
-**Verify:** open the Unity Console. Within a few seconds of compile
-finishing you should see:
-
-```
+```text
 [Reify] Bridge listening on http://127.0.0.1:17777/
 ```
 
-If you see a bind error instead, the port is in use — set
-`REIFY_BRIDGE_PORT` to a free port in both Unity's launch environment
-and in the Claude Code MCP config below, then restart.
-
-**Manual smoke test (no Claude Code yet):**
+## Step 3 — Smoke test the bridge directly
 
 ```powershell
-curl -Method Post `
-     -Uri http://127.0.0.1:17777/tool `
-     -ContentType "application/json" `
-     -Body '{"tool":"ping"}'
+Invoke-RestMethod -Method Post `
+  -Uri 'http://127.0.0.1:17777/tool' `
+  -ContentType 'application/json' `
+  -Body '{"tool":"ping"}'
 ```
 
-Expected response (pretty-printed):
+Then:
 
-```json
-{
-  "ok": true,
-  "data": {
-    "status": "ok",
-    "unity_version": "6000.0.30f1",
-    "project_name": "BlankTest",
-    "project_path": "C:/Users/Matte/Unity/BlankTest",
-    "platform": "StandaloneWindows64",
-    "is_play_mode": false,
-    "is_compiling": false,
-    "frame": 12345,
-    "read_at_utc": "2026-04-21T14:40:00.0000000Z"
-  }
-}
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri 'http://127.0.0.1:17777/tool' `
+  -ContentType 'application/json' `
+  -Body '{"tool":"scene-list"}'
 ```
 
-If this works, the Unity side is done. Claude Code is the next step — and
-it does nothing fundamentally different from this `curl`, it just wraps
-MCP protocol around it.
+If both succeed, the Unity-side bridge is healthy.
 
----
+## Step 4 — Wire up Claude Code
 
-## Step 3 — Wire up Claude Code
+Two config examples live in `client-config/`:
 
-Copy `client-config/claude-code.mcp.json` into your Claude Code MCP config.
+- `claude-code.mcp.json`: development config using `dotnet run`
+- `claude-code.mcp.published.json`: published executable config
 
-Or register the server directly:
+You can also register the development server directly:
 
 ```powershell
 claude mcp add reify `
@@ -124,51 +89,31 @@ claude mcp add reify `
   --env REIFY_BRIDGE_PORT=17777
 ```
 
-**Verify:**
+Verify:
 
 ```powershell
 claude mcp list
 ```
 
-`reify` should appear with status `connected` (or at least `ready`).
+## Step 5 — Use it from Claude Code
 
----
+Good first prompts:
 
-## Step 4 — Use it from Claude Code
-
-Open a Claude Code session. Both of these should work:
-
-| Ask                            | Expected                                                                            |
-|--------------------------------|-------------------------------------------------------------------------------------|
-| "Use the reify ping tool."     | Structured response with Unity version, project name, frame counter, timestamp.     |
-| "List the open scenes in Unity." | Array of scene objects with paths, names, dirty flags, root GameObject names.     |
-
-Both tools return timestamped JSON — if you call `scene-list`, dirty a scene
-in Unity, and call it again, the `is_dirty` field should flip and the
-`read_at_utc` timestamp should advance.
-
----
+- `Use the reify ping tool.`
+- `List the open scenes in Unity.`
+- `Call reify persistence-status.`
 
 ## Troubleshooting
 
-| Symptom                                                          | Cause                                              | Fix                                                                                                           |
-|------------------------------------------------------------------|----------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| Claude Code says `UNITY_UNREACHABLE`                             | Unity Editor is closed or package not installed    | Open Unity with the project that has `com.reify.unity` in `manifest.json`. Watch for the `[Reify] Bridge listening` log line. |
-| `Bridge listening` never appears                                 | Package failed to compile                          | Open the Console, look for red errors. Most likely culprit: Newtonsoft missing.                               |
-| `Bind failed` / `HttpListenerException`                          | Port 17777 is in use                               | Set `REIFY_BRIDGE_PORT` to something free in Unity's launch env and Claude Code's config; restart both.        |
-| `scene-list` returns empty                                       | No scenes open in Editor (rare)                    | Open any scene; rerun.                                                                                        |
-| Tools hang for 30 s then time out                                | Main thread blocked (compiling, modal dialog open) | Wait for compile to finish; dismiss any modal.                                                                |
+- `UNITY_UNREACHABLE`: Unity is closed, still compiling, or the package is not installed
+- bind error on `17777`: choose a different `REIFY_BRIDGE_PORT` and use it on both sides
+- timeout: Unity main thread is blocked, a modal dialog is open, or the editor is mid-refresh
 
----
+## What a successful bootstrap looks like
 
-## What "works" means in Phase A
+- `ping` returns Unity version, project info, timestamp, and frame
+- `scene-list` returns the open scenes with load / dirty / active metadata
+- Claude Code can call the server through MCP without manual JSON copying
 
-- `ping` returns a populated response with non-empty `unity_version` and
-  `project_name`, and the `read_at_utc` field advances between calls.
-- `scene-list` returns the scenes currently open in the Editor, with
-  correct `is_active`, `is_loaded`, `is_dirty` flags and the root GameObject
-  names of each.
-- Both are callable from Claude Code as MCP tools without any manual
-  copying of JSON.
-
-Anything beyond that is Phase B.
+That proves the transport path. The local tool surface extends much further
+than this bootstrap check.

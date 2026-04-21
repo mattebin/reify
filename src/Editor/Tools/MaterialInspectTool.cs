@@ -19,6 +19,7 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class MaterialInspectTool
     {
+        [ReifyTool("material-inspect")]
         public static Task<object> Handle(JToken args)
         {
             var assetPath  = args?.Value<string>("asset_path");

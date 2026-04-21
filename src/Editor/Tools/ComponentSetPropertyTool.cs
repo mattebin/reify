@@ -18,6 +18,7 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class ComponentSetPropertyTool
     {
+        [ReifyTool("component-set-property")]
         public static Task<object> Handle(JToken args)
         {
             var instanceId = args?["instance_id"]?.Type == JTokenType.Integer

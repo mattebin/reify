@@ -18,6 +18,7 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class AnimatorStateTool
     {
+        [ReifyTool("animator-state")]
         public static Task<object> Handle(JToken args)
         {
             var id     = args?["animator_instance_id"]?.Type == JTokenType.Integer

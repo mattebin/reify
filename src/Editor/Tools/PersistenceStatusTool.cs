@@ -17,6 +17,7 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class PersistenceStatusTool
     {
+        [ReifyTool("persistence-status")]
         public static Task<object> Handle(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>

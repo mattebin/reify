@@ -9,6 +9,7 @@ namespace Reify.Editor.Tools
 {
     internal static class ComponentRemoveTool
     {
+        [ReifyTool("component-remove")]
         public static Task<object> Handle(JToken args)
         {
             var instanceId = args?["instance_id"]?.Type == JTokenType.Integer

@@ -20,12 +20,15 @@ namespace Reify.Editor.Tools
         private const string KeyLastCompile      = "Reify.LastCompileFinishedUtc";
         private const string KeyLastReload       = "Reify.LastDomainReloadUtc";
         private const string KeyLastCompileStart = "Reify.LastCompileStartedUtc";
+        private const string KeyPlayModeTransition = "Reify.PlayModeTransition";
+        private const string KeyPlayModeTransitionUtc = "Reify.PlayModeTransitionUtc";
 
         static DomainReloadStatusTool()
         {
             SessionState.SetString(KeyLastReload, DateTime.UtcNow.ToString("o"));
             CompilationPipeline.compilationStarted  += OnCompileStarted;
             CompilationPipeline.compilationFinished += OnCompileFinished;
+            EditorApplication.playModeStateChanged  += OnPlayModeStateChanged;
         }
 
         private static void OnCompileStarted(object _)
@@ -33,6 +36,27 @@ namespace Reify.Editor.Tools
         private static void OnCompileFinished(object _)
             => SessionState.SetString(KeyLastCompile, DateTime.UtcNow.ToString("o"));
 
+        private static void OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            switch (change)
+            {
+                case PlayModeStateChange.ExitingEditMode:
+                    SessionState.SetString(KeyPlayModeTransition, "enter_play");
+                    SessionState.SetString(KeyPlayModeTransitionUtc, DateTime.UtcNow.ToString("o"));
+                    break;
+                case PlayModeStateChange.ExitingPlayMode:
+                    SessionState.SetString(KeyPlayModeTransition, "exit_play");
+                    SessionState.SetString(KeyPlayModeTransitionUtc, DateTime.UtcNow.ToString("o"));
+                    break;
+                case PlayModeStateChange.EnteredEditMode:
+                case PlayModeStateChange.EnteredPlayMode:
+                    SessionState.EraseString(KeyPlayModeTransition);
+                    SessionState.EraseString(KeyPlayModeTransitionUtc);
+                    break;
+            }
+        }
+
+        [ReifyTool("domain-reload-status")]
         public static Task<object> Handle(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -41,11 +65,13 @@ namespace Reify.Editor.Tools
                 var updating      = EditorApplication.isUpdating;
                 var playing       = EditorApplication.isPlaying;
                 var paused        = EditorApplication.isPaused;
-                var transitioning = EditorApplication.isPlayingOrWillChangePlaymode && !playing;
+                var playModeTransition = SessionState.GetString(KeyPlayModeTransition, null);
+                var transitionAtUtc    = SessionState.GetString(KeyPlayModeTransitionUtc, null);
+                var transitioning      = !string.IsNullOrEmpty(playModeTransition);
                 var busy          = compiling || updating || transitioning;
 
                 string appState;
-                if (transitioning) appState = playing ? "exit_play" : "enter_play";
+                if (transitioning) appState = playModeTransition;
                 else if (paused && playing) appState = "pause";
                 else if (playing)           appState = "play";
                 else                        appState = "edit";
@@ -60,7 +86,7 @@ namespace Reify.Editor.Tools
                 if (updating)
                     warnings.Add("Editor is updating (asset import / database refresh) — prefer waiting.");
                 if (transitioning)
-                    warnings.Add("Editor is transitioning play mode — wait for the transition to settle.");
+                    warnings.Add($"Editor is transitioning play mode ({playModeTransition}) — wait for the transition to settle.");
                 if (!string.IsNullOrEmpty(lastReload)
                     && DateTime.TryParse(lastReload, out var reloadAt)
                     && (DateTime.UtcNow - reloadAt).TotalSeconds < 2)
@@ -79,6 +105,7 @@ namespace Reify.Editor.Tools
                     last_compile_started_utc    = lastCompileStart,
                     last_compile_finished_utc   = lastCompile,
                     last_domain_reload_utc      = lastReload,
+                    play_mode_transition_started_utc = transitionAtUtc,
                     warnings                    = warnings.ToArray(),
                     read_at_utc                 = DateTime.UtcNow.ToString("o"),
                     frame                       = (long)Time.frameCount

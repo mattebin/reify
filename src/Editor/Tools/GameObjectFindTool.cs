@@ -10,6 +10,7 @@ namespace Reify.Editor.Tools
 {
     internal static class GameObjectFindTool
     {
+        [ReifyTool("gameobject-find")]
         public static Task<object> Handle(JToken args)
         {
             var name       = args?.Value<string>("name");

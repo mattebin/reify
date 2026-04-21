@@ -10,6 +10,7 @@ namespace Reify.Editor.Tools
 {
     internal static class ComponentGetTool
     {
+        [ReifyTool("component-get")]
         public static Task<object> Handle(JToken args)
         {
             var path       = args?.Value<string>("path");

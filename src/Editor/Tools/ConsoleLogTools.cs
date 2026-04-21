@@ -68,6 +68,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- console-log-read ----------
+        [ReifyTool("console-log-read")]
         public static Task<object> Read(JToken args)
         {
             var typeFilter      = (args?.Value<string>("type_filter") ?? "all").ToLowerInvariant();
@@ -99,6 +100,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- console-log-clear ----------
+        [ReifyTool("console-log-clear")]
         public static Task<object> Clear(JToken args)
         {
             var alsoClearUnityConsole = args?.Value<bool?>("clear_unity_console") ?? true;
@@ -143,6 +145,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- console-log-subscribe-snapshot ----------
+        [ReifyTool("console-log-subscribe-snapshot")]
         public static Task<object> SubscribeSnapshot(JToken args)
         {
             var sessionId      = args?.Value<string>("session_id") ?? "default";

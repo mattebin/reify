@@ -10,6 +10,7 @@ namespace Reify.Editor.Tools
 {
     internal static class PingTool
     {
+        [ReifyTool("ping")]
         public static Task<object> Handle(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>

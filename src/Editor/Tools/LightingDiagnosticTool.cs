@@ -19,6 +19,7 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class LightingDiagnosticTool
     {
+        [ReifyTool("lighting-diagnostic")]
         public static Task<object> Handle(JToken args)
         {
             var scenePath = args?.Value<string>("scene_path");

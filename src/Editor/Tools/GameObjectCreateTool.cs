@@ -9,6 +9,7 @@ namespace Reify.Editor.Tools
 {
     internal static class GameObjectCreateTool
     {
+        [ReifyTool("gameobject-create")]
         public static Task<object> Handle(JToken args)
         {
             var name        = args?.Value<string>("name")            ?? "GameObject";

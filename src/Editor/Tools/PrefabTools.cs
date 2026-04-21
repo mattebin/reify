@@ -12,6 +12,7 @@ namespace Reify.Editor.Tools
     internal static class PrefabTools
     {
         // ---------- prefab-create ----------
+        [ReifyTool("prefab-create")]
         public static Task<object> Create(JToken args)
         {
             var goPath     = args?.Value<string>("gameobject_path") ?? throw new ArgumentException("gameobject_path is required.");
@@ -49,6 +50,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- prefab-instantiate ----------
+        [ReifyTool("prefab-instantiate")]
         public static Task<object> Instantiate(JToken args)
         {
             var assetPath  = args?.Value<string>("asset_path") ?? throw new ArgumentException("asset_path is required.");
@@ -88,6 +90,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- prefab-open ----------
+        [ReifyTool("prefab-open")]
         public static Task<object> Open(JToken args)
         {
             var assetPath = args?.Value<string>("asset_path") ?? throw new ArgumentException("asset_path is required.");
@@ -111,6 +114,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- prefab-close ----------
+        [ReifyTool("prefab-close")]
         public static Task<object> Close(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -127,6 +131,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- prefab-get-overrides ----------
+        [ReifyTool("prefab-get-overrides")]
         public static Task<object> GetOverrides(JToken args)
         {
             var goPath = args?.Value<string>("gameobject_path") ?? throw new ArgumentException("gameobject_path is required.");
@@ -198,6 +203,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- prefab-apply-overrides ----------
+        [ReifyTool("prefab-apply-overrides")]
         public static Task<object> ApplyOverrides(JToken args)
         {
             var goPath = args?.Value<string>("gameobject_path") ?? throw new ArgumentException("gameobject_path is required.");
@@ -222,6 +228,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- prefab-revert-overrides ----------
+        [ReifyTool("prefab-revert-overrides")]
         public static Task<object> RevertOverrides(JToken args)
         {
             var goPath = args?.Value<string>("gameobject_path") ?? throw new ArgumentException("gameobject_path is required.");

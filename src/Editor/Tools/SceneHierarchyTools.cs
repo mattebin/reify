@@ -20,6 +20,7 @@ namespace Reify.Editor.Tools
         private const int MaxPageSize     = 5000;
 
         // ---------- scene-hierarchy ----------
+        [ReifyTool("scene-hierarchy")]
         public static Task<object> Hierarchy(JToken args)
         {
             var scenePath = args?.Value<string>("scene_path");
@@ -56,6 +57,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- scene-query ----------
+        [ReifyTool("scene-query")]
         public static Task<object> Query(JToken args)
         {
             var scenePath       = args?.Value<string>("scene_path");
@@ -119,6 +121,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- scene-stats ----------
+        [ReifyTool("scene-stats")]
         public static Task<object> Stats(JToken args)
         {
             var scenePath = args?.Value<string>("scene_path");

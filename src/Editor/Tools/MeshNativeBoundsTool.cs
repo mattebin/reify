@@ -22,6 +22,7 @@ namespace Reify.Editor.Tools
         private const float SmallMeshThresholdMeters = 0.1f;
         private const float LargeMeshThresholdMeters = 100f;
 
+        [ReifyTool("mesh-native-bounds")]
         public static Task<object> Handle(JToken args)
         {
             var assetPath      = args?.Value<string>("asset_path");

@@ -25,6 +25,7 @@ namespace Reify.Editor.Tools
         private static Dictionary<string, List<string>> _reverseIndex;
         private static readonly object _cacheLock = new object();
 
+        [ReifyTool("asset-dependents")]
         public static Task<object> Handle(JToken args)
         {
             var assetPath        = args?.Value<string>("asset_path") ?? throw new ArgumentException("asset_path is required.");

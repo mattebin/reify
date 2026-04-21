@@ -11,6 +11,7 @@ namespace Reify.Editor.Tools
     internal static class EditorOpsTools
     {
         // ---------- editor-menu-execute ----------
+        [ReifyTool("editor-menu-execute")]
         public static Task<object> MenuExecute(JToken args)
         {
             var path = args?.Value<string>("path") ?? throw new ArgumentException("path is required (e.g. 'GameObject/3D Object/Cube').");
@@ -38,6 +39,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- editor-undo ----------
+        [ReifyTool("editor-undo")]
         public static Task<object> Undo(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -57,6 +59,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- editor-redo ----------
+        [ReifyTool("editor-redo")]
         public static Task<object> Redo(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -74,6 +77,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- editor-undo-history ----------
+        [ReifyTool("editor-undo-history")]
         public static Task<object> UndoHistory(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -114,6 +118,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- editor-selection-get ----------
+        [ReifyTool("editor-selection-get")]
         public static Task<object> SelectionGet(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -139,6 +144,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- editor-selection-set ----------
+        [ReifyTool("editor-selection-set")]
         public static Task<object> SelectionSet(JToken args)
         {
             var ids   = args?["instance_ids"] as JArray;

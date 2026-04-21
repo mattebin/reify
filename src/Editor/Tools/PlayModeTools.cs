@@ -38,6 +38,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- play-mode-enter ----------
+        [ReifyTool("play-mode-enter")]
         public static Task<object> Enter(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -50,6 +51,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- play-mode-exit ----------
+        [ReifyTool("play-mode-exit")]
         public static Task<object> Exit(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -62,6 +64,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- play-mode-pause ----------
+        [ReifyTool("play-mode-pause")]
         public static Task<object> Pause(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -74,6 +77,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- play-mode-resume ----------
+        [ReifyTool("play-mode-resume")]
         public static Task<object> Resume(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -86,6 +90,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- play-mode-step ----------
+        [ReifyTool("play-mode-step")]
         public static Task<object> Step(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -100,6 +105,7 @@ namespace Reify.Editor.Tools
         }
 
         // ---------- play-mode-status ----------
+        [ReifyTool("play-mode-status")]
         public static Task<object> StatusTool(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() => Status("read"));
