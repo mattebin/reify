@@ -36,7 +36,7 @@ namespace Reify.Editor.Tools
                 object before = null;
                 try
                 {
-                    switch (p.Value.type)
+                    switch (p.type)
                     {
                         case AnimatorControllerParameterType.Bool:    before = animator.GetBool(paramName); break;
                         case AnimatorControllerParameterType.Int:     before = animator.GetInteger(paramName); break;
@@ -54,7 +54,7 @@ namespace Reify.Editor.Tools
 
                 try
                 {
-                    switch (p.Value.type)
+                    switch (p.type)
                     {
                         case AnimatorControllerParameterType.Bool:
                             animator.SetBool(paramName, value.Value<bool>()); break;
@@ -71,14 +71,14 @@ namespace Reify.Editor.Tools
                 catch (FormatException)
                 {
                     throw new InvalidOperationException(
-                        $"Value type mismatch for parameter '{paramName}' ({p.Value.type}). " +
+                        $"Value type mismatch for parameter '{paramName}' ({p.type}). " +
                         "Pass a bool for Bool/Trigger, an int for Int, a float for Float.");
                 }
 
                 object after = null;
                 try
                 {
-                    switch (p.Value.type)
+                    switch (p.type)
                     {
                         case AnimatorControllerParameterType.Bool:    after = animator.GetBool(paramName); break;
                         case AnimatorControllerParameterType.Int:     after = animator.GetInteger(paramName); break;
@@ -96,7 +96,7 @@ namespace Reify.Editor.Tools
                         gameobject_path = GameObjectResolver.PathOf(animator.gameObject)
                     },
                     parameter_name = paramName,
-                    type           = p.Value.type.ToString(),
+                    type           = p.type.ToString(),
                     before,
                     after,
                     read_at_utc    = DateTime.UtcNow.ToString("o"),
@@ -195,7 +195,7 @@ namespace Reify.Editor.Tools
                 ?? throw new InvalidOperationException($"GameObject '{gameObjectPath}' has no Animator component.");
         }
 
-        private static AnimatorControllerParameter? FindParameter(Animator a, string name)
+        private static AnimatorControllerParameter FindParameter(Animator a, string name)
         {
             var ps = a.parameters;
             if (ps == null) return null;
