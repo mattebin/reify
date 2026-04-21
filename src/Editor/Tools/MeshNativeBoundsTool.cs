@@ -58,7 +58,7 @@ namespace Reify.Editor.Tools
 
             return obj switch
             {
-                Mesh mesh            => BuildForMesh(mesh, new MeshSourceRef("asset", AssetDatabase.GetAssetPath(mesh)),
+                Mesh mesh            => BuildForMesh(mesh, "asset", AssetDatabase.GetAssetPath(mesh),
                                                     renderer: null, transform: null, importer: null),
                 GameObject go        => ForGameObject(go, identifier: instanceId.ToString()),
                 _                    => throw new InvalidOperationException(
@@ -72,7 +72,7 @@ namespace Reify.Editor.Tools
             if (mesh != null)
                 return BuildForMesh(
                     mesh,
-                    new MeshSourceRef("asset", assetPath),
+                    "asset", assetPath,
                     renderer: null,
                     transform: null,
                     importer: AssetImporter.GetAtPath(assetPath) as ModelImporter);
@@ -95,7 +95,7 @@ namespace Reify.Editor.Tools
             var importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
             return BuildForMesh(
                 sharedMesh,
-                new MeshSourceRef("asset", assetPath),
+                "asset", assetPath,
                 renderer: mf != null ? mf.GetComponent<Renderer>() : smr,
                 transform: null, // asset-side bounds are native only; effective bounds need a scene instance
                 importer: importer);
@@ -135,7 +135,7 @@ namespace Reify.Editor.Tools
 
             return BuildForMesh(
                 mesh,
-                new MeshSourceRef("gameobject", identifier),
+                "gameobject", identifier,
                 renderer: renderer,
                 transform: go.transform,
                 importer: importer);
@@ -145,7 +145,8 @@ namespace Reify.Editor.Tools
 
         private static object BuildForMesh(
             Mesh mesh,
-            MeshSourceRef source,
+            string sourceType,
+            string sourceIdentifier,
             Renderer renderer,
             Transform transform,
             ModelImporter importer)
@@ -198,7 +199,7 @@ namespace Reify.Editor.Tools
 
             var response = new
             {
-                source = new { type = source.Type, identifier = source.Identifier },
+                source = new { type = sourceType, identifier = sourceIdentifier },
                 mesh_name       = string.IsNullOrEmpty(mesh.name) ? "<unnamed>" : mesh.name,
                 submesh_count   = mesh.subMeshCount,
                 native_bounds   = ToBounds(native),
