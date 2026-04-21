@@ -19,10 +19,10 @@ against Unity's API in its own structured-state-first philosophy.
 - [x] Components (add, remove, get/set serialized properties, wire references) *(add/get/modify/remove/set-property shipped 2026-04-21)*
 - [x] Assets (list, import, delete, search, prefabs, materials) *(find/create/delete/get/rename/move shipped 2026-04-21; prefab tooling in its own batch)*
 - [ ] Scripts (create, read, update C#)
-- [ ] Play Mode control
+- [x] Play Mode control *(enter/exit/pause/resume/step/status shipped 2026-04-21)*
 - [ ] Editor operations (execute menu item, undo/redo, editor state)
 - [ ] Project info (packages, render pipeline, build settings)
-- [ ] Console log read/clear
+- [x] Console log read/clear *(read/clear/subscribe-snapshot shipped 2026-04-21)*
 - [ ] Tags & Layers
 - [ ] Selection
 - [x] Prefab mode (open, close, overrides, apply/revert) *(create/instantiate/open/close/get-overrides/apply-overrides/revert-overrides shipped 2026-04-21)*
@@ -56,7 +56,7 @@ against Unity's API in its own structured-state-first philosophy.
 - [ ] urp-pipeline-state — inspect URP asset config, diagnose why skybox/features not rendering
 - [ ] render-queue-audit — report render queue, sorting layer, depth conflicts across scene
 - [ ] animator-state/graph — current state, parameters, transitions, blend tree values as JSON
-- [ ] scene-query — grep-like structured query over scene hierarchy and component properties
+- [x] scene-query — grep-like structured query over scene hierarchy and component properties *(shipped 2026-04-21 with scene-hierarchy + scene-stats)*
 - [ ] lighting-diagnostic — report baked vs realtime, light probe coverage, skybox config, ambient state
 - [ ] asset-dependents — what references this asset, in what scenes, what components
 - [ ] domain-reload-status — is Unity mid-compile, is domain reload in progress, ready-to-operate flag
