@@ -89,6 +89,12 @@ namespace Reify.Editor.Bridge
             Register("editor-selection-get",  args => Tools.EditorOpsTools.SelectionGet(args));
             Register("editor-selection-set",  args => Tools.EditorOpsTools.SelectionSet(args));
 
+            Register("project-info",                  args => Tools.ProjectInfoTools.Info(args));
+            Register("project-packages",              args => Tools.ProjectInfoTools.Packages(args));
+            Register("project-build-settings",        args => Tools.ProjectInfoTools.BuildSettings(args));
+            Register("project-layers-tags",           args => Tools.ProjectInfoTools.LayersTags(args));
+            Register("project-render-pipeline-state", args => Tools.ProjectInfoTools.RenderPipelineState(args));
+
             Start();
         }
 
