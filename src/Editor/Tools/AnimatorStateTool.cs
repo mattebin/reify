@@ -77,6 +77,42 @@ namespace Reify.Editor.Tools
             if (animator.avatar == null)
                 warnings.Add("Animator has no Avatar assigned — humanoid retargeting cannot resolve. Classic T-pose cause when the controller expects humanoid clips.");
 
+            // Without a controller, Unity logs noisy warnings every time we
+            // touch layerCount/parameters. Short-circuit with a skeleton
+            // response that still carries the avatar + controller-null signal
+            // plus the warning set — the caller gets structured state and
+            // the Console stays clean.
+            if (runtimeController == null)
+            {
+                return new
+                {
+                    source          = new { type = sourceType, identifier = sourceId },
+                    gameobject_path = GameObjectResolver.PathOf(animator.gameObject),
+                    animator_instance_id = GameObjectResolver.InstanceIdOf(animator),
+                    controller_name = (string)null,
+                    controller_path = (string)null,
+                    controller_is_override = false,
+                    avatar = animator.avatar != null ? new
+                    {
+                        name          = animator.avatar.name,
+                        is_human      = animator.avatar.isHuman,
+                        is_valid      = animator.avatar.isValid,
+                        asset_path    = AssetDatabase.GetAssetPath(animator.avatar)
+                    } : null,
+                    apply_root_motion = animator.applyRootMotion,
+                    update_mode       = animator.updateMode.ToString(),
+                    culling_mode      = animator.cullingMode.ToString(),
+                    speed             = animator.speed,
+                    layer_count       = 0,
+                    parameter_count   = 0,
+                    layers            = Array.Empty<object>(),
+                    parameters        = Array.Empty<object>(),
+                    warnings          = warnings.ToArray(),
+                    read_at_utc       = DateTime.UtcNow.ToString("o"),
+                    frame             = (long)Time.frameCount
+                };
+            }
+
             if (controller != null)
             {
                 // Dead-parameter + unreachable-state analysis. Only runs when
