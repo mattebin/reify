@@ -95,7 +95,8 @@ namespace Reify.Editor.Bridge
             Register("project-layers-tags",           args => Tools.ProjectInfoTools.LayersTags(args));
             Register("project-render-pipeline-state", args => Tools.ProjectInfoTools.RenderPipelineState(args));
 
-            Register("animator-state", args => Tools.AnimatorStateTool.Handle(args));
+            Register("animator-state",     args => Tools.AnimatorStateTool.Handle(args));
+            Register("render-queue-audit", args => Tools.RenderQueueAuditTool.Handle(args));
 
             Start();
         }
