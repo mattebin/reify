@@ -123,6 +123,77 @@ public static class GameObjectTools
         new ComponentAddArgs(path, type_name),
         ct);
 
+    [McpServerTool(Name = "component-modify"), Description(
+        "Batch-update fields on an existing Component. Resolve the target by " +
+        "instance_id (preferred) or gameobject_path + component_type. The " +
+        "'properties' dict maps SerializedProperty names (e.g. 'm_Mass', " +
+        "'m_IsKinematic', 'm_Center') to new values — primitive JSON values " +
+        "for scalars, objects like {x,y,z} for vectors, {r,g,b,a} for colors, " +
+        "and {instance_id} or {asset_path} for ObjectReferences. Undo-backed. " +
+        "Returns an 'applied' list and a 'failed' list; a failed entry has " +
+        "{name, reason} so the caller knows which keys didn't land."
+    )]
+    public static async Task<JsonElement> ComponentModify(
+        UnityClient unity,
+        [Description("Component instance id (preferred).")]
+        int? instance_id,
+        [Description("GameObject scene path (with component_type if no instance_id).")]
+        string? gameobject_path,
+        [Description("Short or full component type name (with gameobject_path if no instance_id).")]
+        string? component_type,
+        [Description("Dict of SerializedProperty name → value. Vectors as {x,y,z}; colors as {r,g,b,a}; refs as {instance_id} or {asset_path}.")]
+        Dictionary<string, JsonElement> properties,
+        CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>(
+        "component-modify",
+        new ComponentModifyArgs(instance_id, gameobject_path, component_type, properties),
+        ct);
+
+    [McpServerTool(Name = "component-remove"), Description(
+        "Remove a Component from its GameObject. Resolve by instance_id or " +
+        "(gameobject_path + component_type). Goes through Undo — reversible " +
+        "via Ctrl+Z. Rejects removing Transform (Unity forbids it). Returns " +
+        "the removed component's identifying snapshot."
+    )]
+    public static async Task<JsonElement> ComponentRemove(
+        UnityClient unity,
+        [Description("Component instance id (preferred).")]
+        int? instance_id,
+        [Description("GameObject path when resolving via (path + type).")]
+        string? gameobject_path,
+        [Description("Component type name when resolving via (path + type).")]
+        string? component_type,
+        CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>(
+        "component-remove",
+        new ComponentRemoveArgs(instance_id, gameobject_path, component_type),
+        ct);
+
+    [McpServerTool(Name = "component-set-property"), Description(
+        "Set one SerializedProperty on a Component, with before/after read-back " +
+        "for verification. Supports nested paths that SerializedObject already " +
+        "understands: 'm_LocalPosition.x', 'm_Materials.Array.size', " +
+        "'m_Center.y'. Returns {before, after, type} so the caller has proof " +
+        "of the mutation — per ADR-001 §5 writes verify by reading back."
+    )]
+    public static async Task<JsonElement> ComponentSetProperty(
+        UnityClient unity,
+        [Description("Component instance id (preferred).")]
+        int? instance_id,
+        [Description("GameObject path when resolving via (path + type).")]
+        string? gameobject_path,
+        [Description("Component type name when resolving via (path + type).")]
+        string? component_type,
+        [Description("SerializedProperty path. e.g. 'm_Mass', 'm_LocalScale.x', 'm_Center'.")]
+        string property_path,
+        [Description("New value. Scalars as primitives; vectors {x,y,z}; colors {r,g,b,a}; refs {instance_id} or {asset_path}.")]
+        JsonElement value,
+        CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>(
+        "component-set-property",
+        new ComponentSetPropertyArgs(instance_id, gameobject_path, component_type, property_path, value),
+        ct);
+
     [McpServerTool(Name = "component-get"), Description(
         "Inspect components on a GameObject, or a specific Component by " +
         "instance_id. Pass path (GameObject) or instance_id (either GameObject " +

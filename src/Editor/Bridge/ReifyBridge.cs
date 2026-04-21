@@ -44,8 +44,11 @@ namespace Reify.Editor.Bridge
             Register("gameobject-find",    args => Tools.GameObjectFindTool.Handle(args));
             Register("gameobject-destroy", args => Tools.GameObjectDestroyTool.Handle(args));
             Register("gameobject-modify",  args => Tools.GameObjectModifyTool.Handle(args));
-            Register("component-add",      args => Tools.ComponentAddTool.Handle(args));
-            Register("component-get",      args => Tools.ComponentGetTool.Handle(args));
+            Register("component-add",          args => Tools.ComponentAddTool.Handle(args));
+            Register("component-get",          args => Tools.ComponentGetTool.Handle(args));
+            Register("component-modify",       args => Tools.ComponentModifyTool.Handle(args));
+            Register("component-remove",       args => Tools.ComponentRemoveTool.Handle(args));
+            Register("component-set-property", args => Tools.ComponentSetPropertyTool.Handle(args));
 
             Start();
         }
