@@ -29,7 +29,7 @@ against Unity's API in its own structured-state-first philosophy.
 
 ### Advanced (Phase C — Philosophy Tools + Expanded Coverage)
 - [~] Animation (clips, controllers, parameters, play) — AND philosophy tool: animator-state introspection *(animator-state shipped 2026-04-21; direct clip/controller CRUD deferred)*
-- [ ] Physics (raycasts, sphere/box casts, overlap, settings)
+- [x] Physics (raycasts, sphere/box casts, overlap, settings) *(raycast/raycast-all/spherecast/overlap-sphere/overlap-box/settings shipped 2026-04-21)*
 - [x] Lighting (lights, environment, skybox, lightmap baking, probes) — AND philosophy tool: urp-pipeline-state diagnostic *(project-render-pipeline-state shipped 2026-04-21; direct lighting CRUD deferred)*
 - [ ] Audio (AudioSources, AudioListeners, AudioMixers)
 - [ ] Terrain (create, modify, paint, layers, trees, details)
@@ -59,7 +59,8 @@ against Unity's API in its own structured-state-first philosophy.
 - [x] scene-query — grep-like structured query over scene hierarchy and component properties *(shipped 2026-04-21 with scene-hierarchy + scene-stats)*
 - [x] lighting-diagnostic — report baked vs realtime, light probe coverage, skybox config, ambient state *(shipped 2026-04-21)*
 - [x] asset-dependents — what references this asset, in what scenes, what components *(shipped 2026-04-21; component-level ref locations deferred)*
-- [ ] domain-reload-status — is Unity mid-compile, is domain reload in progress, ready-to-operate flag
+- [x] domain-reload-status — is Unity mid-compile, is domain reload in progress, ready-to-operate flag *(shipped 2026-04-21, 9th philosophy tool)*
+- [x] persistence-status — dirty scenes + assets, any_dirty gate flag *(shipped 2026-04-21, 10th philosophy tool — all tractable gaps closed)*
 - [ ] structured-screenshot — only when LLM truly needs vision: returns screenshot + accompanying scene-state JSON for same frame
 
 ---
