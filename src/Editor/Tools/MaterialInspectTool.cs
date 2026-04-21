@@ -145,7 +145,12 @@ namespace Reify.Editor.Tools
                 }
 
                 // Shared-material check: other renderers pointing at the same mat.
+                // Unity 6 deprecated the FindObjectsSortMode overload, but the
+                // replacement (FindObjectsByType<T>()) doesn't exist on the
+                // 2021.3 floor we target in package.json.
+                #pragma warning disable CS0618
                 var allRenderers = UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+                #pragma warning restore CS0618
                 var sharers = 0;
                 foreach (var r in allRenderers)
                 {
