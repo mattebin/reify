@@ -7,9 +7,11 @@ now exists under `src/`.
 ## Summary
 
 - `reify` is an editor-only Unity MCP stack built in C# / .NET 8
-- the local worktree currently exposes `69` MCP tools
+- the local worktree currently exposes `80` MCP tools
 - latest local validation notes report live validation against Unity
   `6000.4.3f1`
+- the new Scripts domain and latest coverage batch were added after that
+  validation and still need a live Unity pass
 - development is currently local-first, so the local worktree is more current
   than GitHub
 
@@ -24,16 +26,24 @@ now exists under `src/`.
 ## Current tool surface
 
 - Scene: 7
-- GameObject: 4
+- GameObject: 6
 - Component: 5
-- Asset: 7
+- Asset: 10
 - Prefab: 7
 - Play mode: 6
 - Console log: 3
 - Editor ops: 6
 - Project info: 7
+- Packages: 3
+- Scripts: 3
 - Physics: 6
 - Animator: 4
+- Lighting diagnostic: 1
+- Material inspect: 1
+- Mesh bounds: 1
+- Render queue audit: 1
+- Domain reload status: 1
+- Persistence status: 1
 - Ping: 1
 
 Philosophy and diagnostic highlights in the current local worktree:
@@ -55,6 +65,13 @@ Philosophy and diagnostic highlights in the current local worktree:
 - persistence and domain-reload diagnostics
 - bridge registration refactor from manual `Register(...)` calls to
   `[ReifyTool("name")]` plus automatic handler discovery
+- scripts domain: `script-read`, `script-update-or-create`, `script-delete`
+  with structured code evidence (`sha256`, declarations, namespace,
+  file-name/type-name warnings)
+- fast coverage batch:
+  `asset-copy`, `asset-refresh`, `asset-dependencies`,
+  `gameobject-duplicate`, `gameobject-set-parent`,
+  `package-search`, `package-add`, `package-remove`
 - trustworthiness fixes for:
   - stale `instance_id` object-reference writes
   - play-mode transition reporting in `domain-reload-status`
@@ -68,8 +85,9 @@ Philosophy and diagnostic highlights in the current local worktree:
 ## Next likely work
 
 - remaining identity and ambiguity fixes for path-based object resolution
-- packaging and installability improvements
-- deeper coverage for scripts, richer validation flows, and Phase D polish
+- live validation for the new Scripts + coverage batch inside Unity
+- deeper coverage for audio, navigation, UI, richer validation flows, and
+  Phase D polish
 
 ## Pointers
 

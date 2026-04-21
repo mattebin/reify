@@ -32,6 +32,18 @@ public sealed record AssetMoveArgs(
     [property: JsonPropertyName("from")] string From,
     [property: JsonPropertyName("to")]   string To);
 
+public sealed record AssetCopyArgs(
+    [property: JsonPropertyName("from")] string From,
+    [property: JsonPropertyName("to")]   string To);
+
+public sealed record AssetRefreshArgs(
+    [property: JsonPropertyName("path")]         string? Path,
+    [property: JsonPropertyName("force_update")] bool? ForceUpdate);
+
+public sealed record AssetDependenciesArgs(
+    [property: JsonPropertyName("asset_path")] string AssetPath,
+    [property: JsonPropertyName("recursive")]  bool? Recursive);
+
 // ---------- prefab ----------
 
 public sealed record PrefabCreateArgs(

@@ -282,6 +282,121 @@ namespace Reify.Editor.Tools
             });
         }
 
+        // ---------- asset-copy ----------
+        [ReifyTool("asset-copy")]
+        public static Task<object> Copy(JToken args)
+        {
+            var from = args?.Value<string>("from") ?? throw new ArgumentException("from is required.");
+            var to   = args?.Value<string>("to")   ?? throw new ArgumentException("to is required.");
+
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(from)))
+                    throw new InvalidOperationException($"Asset not found: {from}");
+
+                EnsureParentFolder(to);
+                var ok = AssetDatabase.CopyAsset(from, to);
+                if (!ok)
+                    throw new InvalidOperationException($"CopyAsset refused: {from} -> {to}");
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+
+                return new
+                {
+                    copied      = new { from, to },
+                    asset       = AssetSummary(to),
+                    read_at_utc = DateTime.UtcNow.ToString("o"),
+                    frame       = (long)Time.frameCount
+                };
+            });
+        }
+
+        // ---------- asset-refresh ----------
+        [ReifyTool("asset-refresh")]
+        public static Task<object> Refresh(JToken args)
+        {
+            var path        = args?.Value<string>("path");
+            var forceUpdate = args?.Value<bool?>("force_update") ?? false;
+
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                var options = forceUpdate ? ImportAssetOptions.ForceUpdate : ImportAssetOptions.Default;
+
+                if (!string.IsNullOrEmpty(path))
+                {
+                    if (!path.StartsWith("Assets/", StringComparison.Ordinal) &&
+                        !path.StartsWith("Packages/", StringComparison.Ordinal))
+                        throw new ArgumentException($"path must start with 'Assets/' or 'Packages/': {path}");
+
+                    AssetDatabase.ImportAsset(path, options);
+                    AssetDatabase.Refresh(options);
+
+                    var guid = AssetDatabase.AssetPathToGUID(path);
+                    var exists = !string.IsNullOrEmpty(guid);
+                    return new
+                    {
+                        refreshed = new
+                        {
+                            scope        = "asset",
+                            path,
+                            force_update = forceUpdate,
+                            exists
+                        },
+                        asset       = exists ? AssetSummary(path) : null,
+                        read_at_utc = DateTime.UtcNow.ToString("o"),
+                        frame       = (long)Time.frameCount
+                    };
+                }
+
+                AssetDatabase.Refresh(options);
+                return new
+                {
+                    refreshed = new
+                    {
+                        scope        = "project",
+                        force_update = forceUpdate
+                    },
+                    asset_count  = AssetDatabase.GetAllAssetPaths().Length,
+                    read_at_utc  = DateTime.UtcNow.ToString("o"),
+                    frame        = (long)Time.frameCount
+                };
+            });
+        }
+
+        // ---------- asset-dependencies ----------
+        [ReifyTool("asset-dependencies")]
+        public static Task<object> Dependencies(JToken args)
+        {
+            var assetPath = args?.Value<string>("asset_path") ?? throw new ArgumentException("asset_path is required.");
+            var recursive = args?.Value<bool?>("recursive") ?? true;
+
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(assetPath)))
+                    throw new InvalidOperationException($"Asset not found: {assetPath}");
+
+                var deps = AssetDatabase.GetDependencies(assetPath, recursive);
+                var list = new List<object>(deps.Length);
+                foreach (var dep in deps)
+                {
+                    if (string.Equals(dep, assetPath, StringComparison.Ordinal))
+                        continue;
+                    list.Add(AssetSummary(dep));
+                }
+
+                return new
+                {
+                    asset = AssetSummary(assetPath),
+                    recursive,
+                    dependency_count = list.Count,
+                    dependencies     = list.ToArray(),
+                    read_at_utc      = DateTime.UtcNow.ToString("o"),
+                    frame            = (long)Time.frameCount
+                };
+            });
+        }
+
         // ---------- helpers ----------
 
         private static object AssetSummary(string path)

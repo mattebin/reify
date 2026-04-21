@@ -58,6 +58,33 @@ public static class AssetTools
     public static async Task<JsonElement> AssetMove(UnityClient unity,
         string from, string to, CancellationToken ct
     ) => await unity.CallAsync<JsonElement>("asset-move", new AssetMoveArgs(from, to), ct);
+
+    [McpServerTool(Name = "asset-copy"), Description(
+        "Copy an asset to a new path. Parent folders of 'to' are auto-created. " +
+        "Returns {from, to} and the copied asset's post-copy summary.")]
+    public static async Task<JsonElement> AssetCopy(UnityClient unity,
+        string from, string to, CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>("asset-copy", new AssetCopyArgs(from, to), ct);
+
+    [McpServerTool(Name = "asset-refresh"), Description(
+        "Refresh Unity's AssetDatabase. With path, reimport just that asset; " +
+        "without path, refresh the whole project. force_update=true requests " +
+        "a stronger reimport pass. Returns post-refresh asset state when a " +
+        "path is provided.")]
+    public static async Task<JsonElement> AssetRefresh(UnityClient unity,
+        string? path, bool? force_update, CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>("asset-refresh",
+        new AssetRefreshArgs(path, force_update), ct);
+
+    [McpServerTool(Name = "asset-dependencies"), Description(
+        "Return the forward dependencies of an asset as structured summaries. " +
+        "recursive=true (default) walks transitive dependencies; false limits " +
+        "to direct dependencies. Use this when you need a focused dependency " +
+        "surface without the heavier asset-get payload.")]
+    public static async Task<JsonElement> AssetDependencies(UnityClient unity,
+        string asset_path, bool? recursive, CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>("asset-dependencies",
+        new AssetDependenciesArgs(asset_path, recursive), ct);
 }
 
 [McpServerToolType]

@@ -104,6 +104,43 @@ public static class GameObjectTools
         new GameObjectModifyArgs(path, new_name, reparent_to, active, layer, tag),
         ct);
 
+    [McpServerTool(Name = "gameobject-duplicate"), Description(
+        "Duplicate a GameObject in the active scene or prefab stage. The copy " +
+        "inherits the source hierarchy and transform. Optional new_name " +
+        "renames the duplicate, and optional parent_path reparents it after " +
+        "duplication. Returns both the source snapshot and the duplicated " +
+        "GameObject DTO.")]
+    public static async Task<JsonElement> GameObjectDuplicate(
+        UnityClient unity,
+        [Description("Scene path of the GameObject to duplicate.")]
+        string path,
+        [Description("Optional new name for the duplicate.")]
+        string? new_name,
+        [Description("Optional parent override; empty string makes the duplicate a root object.")]
+        string? parent_path,
+        CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>(
+        "gameobject-duplicate",
+        new GameObjectDuplicateArgs(path, new_name, parent_path),
+        ct);
+
+    [McpServerTool(Name = "gameobject-set-parent"), Description(
+        "Explicit parenting tool for a GameObject. parent_path sets the new " +
+        "parent; pass an empty string to make the object a scene root. This " +
+        "is a narrower version of gameobject-modify for agent flows that want " +
+        "one dedicated parenting action with a clear response shape.")]
+    public static async Task<JsonElement> GameObjectSetParent(
+        UnityClient unity,
+        [Description("Scene path of the GameObject to reparent.")]
+        string path,
+        [Description("New parent path, or empty string for scene root.")]
+        string? parent_path,
+        CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>(
+        "gameobject-set-parent",
+        new GameObjectSetParentArgs(path, parent_path),
+        ct);
+
     [McpServerTool(Name = "component-add"), Description(
         "Add a Component to a GameObject by type name. type_name accepts the " +
         "short form ('BoxCollider'), full FQN ('UnityEngine.BoxCollider'), or " +

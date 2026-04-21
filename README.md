@@ -27,22 +27,40 @@ contains:
 - a Unity Editor package (`com.reify.unity`)
 - a localhost HTTP bridge between the server and Unity
 - shared contracts used by the server transport
-- `69` MCP tools in the current local codebase
+- `80` MCP tools in the current local codebase
 
 Current tool domains in the local worktree:
 
 - Scene: 7
-- GameObject: 4
+- GameObject: 6
 - Component: 5
-- Asset: 7
+- Asset: 10
 - Prefab: 7
 - Play mode: 6
 - Console log: 3
 - Editor ops: 6
 - Project info: 7
+- Packages: 3
+- Scripts: 3
 - Physics: 6
 - Animator: 4
+- Lighting diagnostic: 1
+- Material inspect: 1
+- Mesh bounds: 1
+- Render queue audit: 1
+- Domain reload status: 1
+- Persistence status: 1
 - Ping: 1
+
+Newest local additions:
+
+- Scripts: `script-read`, `script-update-or-create`, `script-delete`
+  with structured code evidence such as SHA-256, line count, namespace,
+  declared types, and file-name/type-name mismatch warnings
+- coverage batch:
+  `asset-copy`, `asset-refresh`, `asset-dependencies`,
+  `gameobject-duplicate`, `gameobject-set-parent`,
+  `package-search`, `package-add`, `package-remove`
 
 Philosophy and diagnostic highlights layered across those domains:
 
@@ -57,8 +75,10 @@ Philosophy and diagnostic highlights layered across those domains:
 - `persistence-status`
 
 Latest local validation notes report live validation against Unity
-`6000.4.3f1`. Development is currently local-first, so the local worktree is
-ahead of any pushed GitHub state.
+`6000.4.3f1`. The new Scripts domain plus the latest coverage batch were added
+after that validation and still need a live Unity pass. Development is
+currently local-first, so the local worktree is ahead of any pushed GitHub
+state.
 
 ## Architecture
 

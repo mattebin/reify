@@ -38,6 +38,17 @@ public sealed record GameObjectModifyArgs(
     [property: JsonPropertyName("tag")]         string? Tag
 );
 
+public sealed record GameObjectDuplicateArgs(
+    [property: JsonPropertyName("path")]        string Path,
+    [property: JsonPropertyName("new_name")]    string? NewName,
+    [property: JsonPropertyName("parent_path")] string? ParentPath
+);
+
+public sealed record GameObjectSetParentArgs(
+    [property: JsonPropertyName("path")]        string Path,
+    [property: JsonPropertyName("parent_path")] string? ParentPath
+);
+
 public sealed record ComponentAddArgs(
     [property: JsonPropertyName("path")]      string Path,
     [property: JsonPropertyName("type_name")] string TypeName

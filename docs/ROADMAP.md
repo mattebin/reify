@@ -15,16 +15,16 @@ against Unity's API in its own structured-state-first philosophy.
 ### Core (Phase B)
 - [x] Ping / scene-list (Phase A)
 - [ ] Scene management (open, save, create, hierarchy tree with pagination)
-- [x] GameObjects (create, delete, duplicate, reparent, activate, transform) *(create/find/destroy/modify shipped 2026-04-21; duplicate deferred)*
+- [x] GameObjects (create, delete, duplicate, reparent, activate, transform) *(create/find/destroy/modify/duplicate/set-parent shipped 2026-04-21)*
 - [x] Components (add, remove, get/set serialized properties, wire references) *(add/get/modify/remove/set-property shipped 2026-04-21)*
-- [x] Assets (list, import, delete, search, prefabs, materials) *(find/create/delete/get/rename/move shipped 2026-04-21; prefab tooling in its own batch)*
-- [ ] Scripts (create, read, update C#)
+- [x] Assets (list, import, delete, search, prefabs, materials) *(find/create/delete/get/rename/move/copy/refresh/dependencies shipped 2026-04-21; prefab tooling in its own batch)*
+- [x] Scripts (create, read, update C#) *(script-read / script-update-or-create / script-delete shipped 2026-04-21; script-execute still deferred)*
 - [x] Play Mode control *(enter/exit/pause/resume/step/status shipped 2026-04-21)*
 - [x] Editor operations (execute menu item, undo/redo, editor state) *(menu-execute/undo/redo/undo-history/selection-get/selection-set shipped 2026-04-21)*
 - [x] Project info (packages, render pipeline, build settings) *(project-info/packages/build-settings/layers-tags/render-pipeline-state shipped 2026-04-21)*
 - [x] Console log read/clear *(read/clear/subscribe-snapshot shipped 2026-04-21)*
 - [ ] Tags & Layers
-- [ ] Selection
+- [x] Selection *(editor-selection-get/set shipped 2026-04-21)*
 - [x] Prefab mode (open, close, overrides, apply/revert) *(create/instantiate/open/close/get-overrides/apply-overrides/revert-overrides shipped 2026-04-21)*
 
 ### Advanced (Phase C — Philosophy Tools + Expanded Coverage)
@@ -131,7 +131,7 @@ ships with structured-state return shapes — no bundled multi-action tools.
    `console-get-logs`, `console-clear-logs`. Base source: Murzak.
 7. **Animator** — port Coplay's `AnimatorRead.cs` almost wholesale; add the
    transitions + graph dump from Gap 6.
-8. **Packages** — `package-add/list/remove/search`. Base source: Murzak.
+8. **Packages** — `package-add/list/remove/search`. Base source: Murzak. *(list shipped as project-packages; add/remove/search shipped 2026-04-21)*
 9. **Refresh + menu items + batch** — `assets-refresh` (Murzak),
    `menu-execute` (Coplay's `ExecuteMenuItem`), `batch-execute`
    (Coplay's `BatchExecute`).
