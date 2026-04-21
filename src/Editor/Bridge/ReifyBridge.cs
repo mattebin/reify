@@ -97,6 +97,7 @@ namespace Reify.Editor.Bridge
 
             Register("animator-state",     args => Tools.AnimatorStateTool.Handle(args));
             Register("render-queue-audit", args => Tools.RenderQueueAuditTool.Handle(args));
+            Register("asset-dependents",   args => Tools.AssetDependentsTool.Handle(args));
 
             Start();
         }
