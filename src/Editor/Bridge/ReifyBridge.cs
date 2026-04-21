@@ -39,6 +39,7 @@ namespace Reify.Editor.Bridge
             Register("scene-open",   args => Tools.SceneOpenTool.Handle(args));
             Register("scene-save",   args => Tools.SceneSaveTool.Handle(args));
             Register("scene-create", args => Tools.SceneCreateTool.Handle(args));
+            Register("mesh-native-bounds", args => Tools.MeshNativeBoundsTool.Handle(args));
 
             Start();
         }

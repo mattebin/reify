@@ -51,7 +51,7 @@ against Unity's API in its own structured-state-first philosophy.
 - [ ] Builds (Windows, macOS, Linux, Android, iOS, WebGL)
 
 ### reify-specific Philosophy Tools (Phase C — the differentiator)
-- [ ] mesh-native-bounds — report mesh native dimensions BEFORE placement to eliminate scale-guessing
+- [x] mesh-native-bounds — report mesh native dimensions BEFORE placement to eliminate scale-guessing *(shipped 2026-04-21, Phase B)*
 - [ ] material-inspect — distinguish asset-backed materials vs MaterialPropertyBlocks, report override source
 - [ ] urp-pipeline-state — inspect URP asset config, diagnose why skybox/features not rendering
 - [ ] render-queue-audit — report render queue, sorting layer, depth conflicts across scene
