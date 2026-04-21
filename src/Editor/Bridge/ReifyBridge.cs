@@ -114,6 +114,7 @@ namespace Reify.Editor.Bridge
             Register("animator-play",          args => Tools.AnimatorMutationTools.Play(args));
 
             Register("domain-reload-status", args => Tools.DomainReloadStatusTool.Handle(args));
+            Register("persistence-status",   args => Tools.PersistenceStatusTool.Handle(args));
 
             Start();
         }
