@@ -74,6 +74,10 @@ namespace Reify.Editor.Bridge
             Register("play-mode-step",   args => Tools.PlayModeTools.Step(args));
             Register("play-mode-status", args => Tools.PlayModeTools.StatusTool(args));
 
+            Register("scene-hierarchy", args => Tools.SceneHierarchyTools.Hierarchy(args));
+            Register("scene-query",     args => Tools.SceneHierarchyTools.Query(args));
+            Register("scene-stats",     args => Tools.SceneHierarchyTools.Stats(args));
+
             Start();
         }
 
