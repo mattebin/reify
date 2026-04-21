@@ -314,13 +314,26 @@ namespace Reify.Editor.Tools
                         break;
                 }
 
+                // Selectable.currentSelectionState is protected in Unity 6.
+                // Reach it via reflection; null out gracefully on failure.
+                string selectionState = null;
+                try
+                {
+                    var prop = typeof(Selectable).GetProperty("currentSelectionState",
+                        System.Reflection.BindingFlags.Instance |
+                        System.Reflection.BindingFlags.Public |
+                        System.Reflection.BindingFlags.NonPublic);
+                    if (prop != null)
+                        selectionState = prop.GetValue(sel)?.ToString();
+                } catch { /* reflection layout drift — leave null */ }
+
                 return new
                 {
                     instance_id            = GameObjectResolver.InstanceIdOf(sel),
                     type_fqn               = sel.GetType().FullName,
                     gameobject_path        = GameObjectResolver.PathOf(sel.gameObject),
                     interactable           = sel.interactable,
-                    current_selection_state = sel.currentSelectionState.ToString(),
+                    current_selection_state = selectionState,
                     transition             = sel.transition.ToString(),
                     target_graphic         = sel.targetGraphic != null ? new {
                         type_fqn    = sel.targetGraphic.GetType().FullName,
