@@ -137,7 +137,7 @@ namespace Reify.Editor.Tools
                     },
                     lightmap_settings = new
                     {
-                        lightmapper  = LightmapEditorSettings.lightmapper.ToString(),
+                        lightmapper  = ReadLightmapper(),
                         realtime_gi  = Lightmapping.realtimeGI,
                         baked_gi     = Lightmapping.bakedGI
                     },
@@ -243,5 +243,22 @@ namespace Reify.Editor.Tools
         }
 
         private static object ToColor(Color c) => new { r = c.r, g = c.g, b = c.b, a = c.a };
+
+        // Unity deprecated LightmapEditorSettings.lightmapper in favour of
+        // LightingSettings.lightmapper (accessed via Lightmapping.lightingSettings).
+        // The new property may not exist on older Unity versions, so we
+        // probe reflectively and fall back to the old API with the pragma.
+        private static string ReadLightmapper()
+        {
+            try
+            {
+                var ls = Lightmapping.lightingSettings;
+                if (ls != null) return ls.lightmapper.ToString();
+            }
+            catch { /* older Unity: property not present */ }
+            #pragma warning disable CS0618
+            return LightmapEditorSettings.lightmapper.ToString();
+            #pragma warning restore CS0618
+        }
     }
 }
