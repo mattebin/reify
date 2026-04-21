@@ -5,6 +5,65 @@ Four phases, rough ordering. Scope estimates are hand-wavy — assume they're
 
 ---
 
+## Phase B/C Coverage Targets (Unity Subsystem Checklist)
+
+Reference derived from AnkleBreaker-Studio/unity-mcp-server's category list
+(study only, no code copied). These are Unity subsystems a comprehensive MCP
+plugin should eventually cover. reify will implement each from scratch
+against Unity's API in its own structured-state-first philosophy.
+
+### Core (Phase B)
+- [x] Ping / scene-list (Phase A)
+- [ ] Scene management (open, save, create, hierarchy tree with pagination)
+- [ ] GameObjects (create, delete, duplicate, reparent, activate, transform)
+- [ ] Components (add, remove, get/set serialized properties, wire references)
+- [ ] Assets (list, import, delete, search, prefabs, materials)
+- [ ] Scripts (create, read, update C#)
+- [ ] Play Mode control
+- [ ] Editor operations (execute menu item, undo/redo, editor state)
+- [ ] Project info (packages, render pipeline, build settings)
+- [ ] Console log read/clear
+- [ ] Tags & Layers
+- [ ] Selection
+- [ ] Prefab mode (open, close, overrides, apply/revert)
+
+### Advanced (Phase C — Philosophy Tools + Expanded Coverage)
+- [ ] Animation (clips, controllers, parameters, play) — AND philosophy tool: animator-state introspection
+- [ ] Physics (raycasts, sphere/box casts, overlap, settings)
+- [ ] Lighting (lights, environment, skybox, lightmap baking, probes) — AND philosophy tool: urp-pipeline-state diagnostic
+- [ ] Audio (AudioSources, AudioListeners, AudioMixers)
+- [ ] Terrain (create, modify, paint, layers, trees, details)
+- [ ] Navigation (NavMesh baking, agents, obstacles, off-mesh links)
+- [ ] Particles (creation, inspection, module editing)
+- [ ] UI (Canvas, UI elements, layout groups, event system)
+- [ ] Input Actions (Input System package)
+- [ ] Assembly Definitions (.asmdef files)
+- [ ] ScriptableObjects
+- [ ] Constraints (position, rotation, scale, aim, parent)
+- [ ] LOD Groups
+- [ ] Profiler (session control, stats, deep profiles)
+- [ ] Frame Debugger
+- [ ] Memory Profiler
+- [ ] Shader Graph / Sub Graphs
+- [ ] VFX Graph
+- [ ] MPPM Multiplayer Playmode
+- [ ] Multi-Instance Unity Editor discovery
+- [ ] Builds (Windows, macOS, Linux, Android, iOS, WebGL)
+
+### reify-specific Philosophy Tools (Phase C — the differentiator)
+- [ ] mesh-native-bounds — report mesh native dimensions BEFORE placement to eliminate scale-guessing
+- [ ] material-inspect — distinguish asset-backed materials vs MaterialPropertyBlocks, report override source
+- [ ] urp-pipeline-state — inspect URP asset config, diagnose why skybox/features not rendering
+- [ ] render-queue-audit — report render queue, sorting layer, depth conflicts across scene
+- [ ] animator-state/graph — current state, parameters, transitions, blend tree values as JSON
+- [ ] scene-query — grep-like structured query over scene hierarchy and component properties
+- [ ] lighting-diagnostic — report baked vs realtime, light probe coverage, skybox config, ambient state
+- [ ] asset-dependents — what references this asset, in what scenes, what components
+- [ ] domain-reload-status — is Unity mid-compile, is domain reload in progress, ready-to-operate flag
+- [ ] structured-screenshot — only when LLM truly needs vision: returns screenshot + accompanying scene-state JSON for same frame
+
+---
+
 ## Phase A — Foundations
 
 Goal: end Phase A with a plugin skeleton that compiles, installs into a
