@@ -81,6 +81,13 @@ namespace Reify.Editor.Bridge
                 Debug.LogError($"[Reify] Duplicate tool name(s): {string.Join(", ", duplicates)}");
         }
 
+        /// <summary>Expose the registered tool names for introspection tools.</summary>
+        public static IEnumerable<string> GetRegisteredToolNames() => Handlers.Keys;
+
+        /// <summary>Look up a handler for batch-execute / meta routing.</summary>
+        public static bool TryGetHandler(string name, out Func<JToken, Task<object>> handler)
+            => Handlers.TryGetValue(name, out handler);
+
         private static void Start()
         {
             _port = ResolvePort();

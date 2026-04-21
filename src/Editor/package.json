@@ -1,15 +1,30 @@
 {
   "name": "com.reify.unity",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "Reify",
-  "description": "Structured state for Unity, for LLMs that reason. Editor-side bridge for the Reify MCP server.",
+  "description": "Structured state for Unity, for LLMs that reason. 150+ MCP tools with evidence-first design: structured JSON responses, ambiguity rejection, Undo-backed writes, philosophy warnings. Editor-side bridge for the Reify MCP server.",
   "unity": "2021.3",
-  "keywords": [ "mcp", "llm", "ai", "reify", "editor-tools" ],
+  "documentationUrl": "https://github.com/mattebin/reify",
+  "changelogUrl": "https://github.com/mattebin/reify/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/mattebin/reify/blob/main/LICENSE",
+  "keywords": [
+    "mcp",
+    "llm",
+    "ai",
+    "reify",
+    "editor-tools",
+    "automation",
+    "structured-state",
+    "claude",
+    "cursor",
+    "windsurf"
+  ],
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   },
   "author": {
-    "name": "Matte",
-    "email": "nejjerxd@gmail.com"
+    "name": "Matte (mattebin)",
+    "email": "nejjerxd@gmail.com",
+    "url": "https://github.com/mattebin"
   }
 }
