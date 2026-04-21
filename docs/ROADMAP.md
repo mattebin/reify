@@ -54,11 +54,11 @@ against Unity's API in its own structured-state-first philosophy.
 - [x] mesh-native-bounds — report mesh native dimensions BEFORE placement to eliminate scale-guessing *(shipped 2026-04-21, Phase B)*
 - [x] material-inspect — distinguish asset-backed materials vs MaterialPropertyBlocks, report override source *(shipped 2026-04-21, second Phase C philosophy tool)*
 - [x] urp-pipeline-state — inspect URP asset config, diagnose why skybox/features not rendering *(shipped as project-render-pipeline-state 2026-04-21)*
-- [ ] render-queue-audit — report render queue, sorting layer, depth conflicts across scene
+- [x] render-queue-audit — report render queue, sorting layer, depth conflicts across scene *(shipped 2026-04-21)*
 - [x] animator-state/graph — current state, parameters, transitions, blend tree values as JSON *(animator-state shipped 2026-04-21; blend-tree-specific detail deferred)*
 - [x] scene-query — grep-like structured query over scene hierarchy and component properties *(shipped 2026-04-21 with scene-hierarchy + scene-stats)*
-- [ ] lighting-diagnostic — report baked vs realtime, light probe coverage, skybox config, ambient state
-- [ ] asset-dependents — what references this asset, in what scenes, what components
+- [x] lighting-diagnostic — report baked vs realtime, light probe coverage, skybox config, ambient state *(shipped 2026-04-21)*
+- [x] asset-dependents — what references this asset, in what scenes, what components *(shipped 2026-04-21; component-level ref locations deferred)*
 - [ ] domain-reload-status — is Unity mid-compile, is domain reload in progress, ready-to-operate flag
 - [ ] structured-screenshot — only when LLM truly needs vision: returns screenshot + accompanying scene-state JSON for same frame
 
