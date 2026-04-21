@@ -20,17 +20,17 @@ against Unity's API in its own structured-state-first philosophy.
 - [x] Assets (list, import, delete, search, prefabs, materials) *(find/create/delete/get/rename/move shipped 2026-04-21; prefab tooling in its own batch)*
 - [ ] Scripts (create, read, update C#)
 - [x] Play Mode control *(enter/exit/pause/resume/step/status shipped 2026-04-21)*
-- [ ] Editor operations (execute menu item, undo/redo, editor state)
-- [ ] Project info (packages, render pipeline, build settings)
+- [x] Editor operations (execute menu item, undo/redo, editor state) *(menu-execute/undo/redo/undo-history/selection-get/selection-set shipped 2026-04-21)*
+- [x] Project info (packages, render pipeline, build settings) *(project-info/packages/build-settings/layers-tags/render-pipeline-state shipped 2026-04-21)*
 - [x] Console log read/clear *(read/clear/subscribe-snapshot shipped 2026-04-21)*
 - [ ] Tags & Layers
 - [ ] Selection
 - [x] Prefab mode (open, close, overrides, apply/revert) *(create/instantiate/open/close/get-overrides/apply-overrides/revert-overrides shipped 2026-04-21)*
 
 ### Advanced (Phase C — Philosophy Tools + Expanded Coverage)
-- [ ] Animation (clips, controllers, parameters, play) — AND philosophy tool: animator-state introspection
+- [~] Animation (clips, controllers, parameters, play) — AND philosophy tool: animator-state introspection *(animator-state shipped 2026-04-21; direct clip/controller CRUD deferred)*
 - [ ] Physics (raycasts, sphere/box casts, overlap, settings)
-- [ ] Lighting (lights, environment, skybox, lightmap baking, probes) — AND philosophy tool: urp-pipeline-state diagnostic
+- [x] Lighting (lights, environment, skybox, lightmap baking, probes) — AND philosophy tool: urp-pipeline-state diagnostic *(project-render-pipeline-state shipped 2026-04-21; direct lighting CRUD deferred)*
 - [ ] Audio (AudioSources, AudioListeners, AudioMixers)
 - [ ] Terrain (create, modify, paint, layers, trees, details)
 - [ ] Navigation (NavMesh baking, agents, obstacles, off-mesh links)
@@ -53,9 +53,9 @@ against Unity's API in its own structured-state-first philosophy.
 ### reify-specific Philosophy Tools (Phase C — the differentiator)
 - [x] mesh-native-bounds — report mesh native dimensions BEFORE placement to eliminate scale-guessing *(shipped 2026-04-21, Phase B)*
 - [x] material-inspect — distinguish asset-backed materials vs MaterialPropertyBlocks, report override source *(shipped 2026-04-21, second Phase C philosophy tool)*
-- [ ] urp-pipeline-state — inspect URP asset config, diagnose why skybox/features not rendering
+- [x] urp-pipeline-state — inspect URP asset config, diagnose why skybox/features not rendering *(shipped as project-render-pipeline-state 2026-04-21)*
 - [ ] render-queue-audit — report render queue, sorting layer, depth conflicts across scene
-- [ ] animator-state/graph — current state, parameters, transitions, blend tree values as JSON
+- [x] animator-state/graph — current state, parameters, transitions, blend tree values as JSON *(animator-state shipped 2026-04-21; blend-tree-specific detail deferred)*
 - [x] scene-query — grep-like structured query over scene hierarchy and component properties *(shipped 2026-04-21 with scene-hierarchy + scene-stats)*
 - [ ] lighting-diagnostic — report baked vs realtime, light probe coverage, skybox config, ambient state
 - [ ] asset-dependents — what references this asset, in what scenes, what components
