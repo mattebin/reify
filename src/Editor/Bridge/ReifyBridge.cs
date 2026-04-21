@@ -50,6 +50,21 @@ namespace Reify.Editor.Bridge
             Register("component-remove",       args => Tools.ComponentRemoveTool.Handle(args));
             Register("component-set-property", args => Tools.ComponentSetPropertyTool.Handle(args));
 
+            Register("asset-find",   args => Tools.AssetTools.Find(args));
+            Register("asset-create", args => Tools.AssetTools.Create(args));
+            Register("asset-delete", args => Tools.AssetTools.Delete(args));
+            Register("asset-get",    args => Tools.AssetTools.Get(args));
+            Register("asset-rename", args => Tools.AssetTools.Rename(args));
+            Register("asset-move",   args => Tools.AssetTools.Move(args));
+
+            Register("prefab-create",           args => Tools.PrefabTools.Create(args));
+            Register("prefab-instantiate",      args => Tools.PrefabTools.Instantiate(args));
+            Register("prefab-open",             args => Tools.PrefabTools.Open(args));
+            Register("prefab-close",            args => Tools.PrefabTools.Close(args));
+            Register("prefab-get-overrides",    args => Tools.PrefabTools.GetOverrides(args));
+            Register("prefab-apply-overrides",  args => Tools.PrefabTools.ApplyOverrides(args));
+            Register("prefab-revert-overrides", args => Tools.PrefabTools.RevertOverrides(args));
+
             Start();
         }
 
