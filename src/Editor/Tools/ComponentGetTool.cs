@@ -64,7 +64,10 @@ namespace Reify.Editor.Tools
                 {
                     instance_id = GameObjectResolver.InstanceIdOf(go),
                     name        = go.name,
-                    path        = GameObjectResolver.PathOf(go)
+                    path        = GameObjectResolver.PathOf(go),
+                    qualified_path = GameObjectResolver.QualifiedPathOf(go),
+                    scene_name  = go.scene.name,
+                    scene_path  = go.scene.path
                 },
                 component_count = comps.Length,
                 components      = list.ToArray(),

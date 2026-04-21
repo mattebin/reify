@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Reify.Editor.Tools
@@ -32,18 +33,44 @@ namespace Reify.Editor.Tools
             var go = GameObjectResolver.ByPath(gameObjectPath)
                 ?? throw new InvalidOperationException($"GameObject not found: {gameObjectPath}");
 
-            // Try full type name first, then short name, across every
-            // Component on the GameObject.
+            var fullMatches = new List<Component>();
+            var shortMatches = new List<Component>();
             foreach (var comp in go.GetComponents<Component>())
             {
                 if (comp == null) continue;
                 var t = comp.GetType();
-                if (t.FullName == componentType || t.Name == componentType)
-                    return comp;
+                if (t.FullName == componentType)
+                    fullMatches.Add(comp);
+                else if (t.Name == componentType)
+                    shortMatches.Add(comp);
             }
+
+            if (fullMatches.Count == 1) return fullMatches[0];
+            if (fullMatches.Count > 1)
+                throw new InvalidOperationException(
+                    BuildAmbiguousComponentMessage(go, componentType, fullMatches));
+
+            if (shortMatches.Count == 1) return shortMatches[0];
+            if (shortMatches.Count > 1)
+                throw new InvalidOperationException(
+                    BuildAmbiguousComponentMessage(go, componentType, shortMatches));
 
             throw new InvalidOperationException(
                 $"No component of type '{componentType}' on GameObject '{gameObjectPath}'.");
+        }
+
+        private static string BuildAmbiguousComponentMessage(GameObject go, string componentType, List<Component> matches)
+        {
+            var candidates = new string[matches.Count];
+            for (var i = 0; i < matches.Count; i++)
+            {
+                var comp = matches[i];
+                candidates[i] = $"{comp.GetType().FullName} (instance_id {GameObjectResolver.InstanceIdOf(comp)})";
+            }
+
+            return
+                $"Component lookup is ambiguous for '{componentType}' on '{GameObjectResolver.QualifiedPathOf(go)}'. " +
+                $"Matches: {string.Join("; ", candidates)}. Use instance_id instead.";
         }
     }
 }

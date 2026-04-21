@@ -225,6 +225,9 @@ namespace Reify.Editor.Tools
                     renderer_type      = renderer.GetType().FullName,
                     renderer_instance_id = GameObjectResolver.InstanceIdOf(renderer),
                     gameobject_path    = GameObjectResolver.PathOf(renderer.gameObject),
+                    gameobject_qualified_path = GameObjectResolver.QualifiedPathOf(renderer.gameObject),
+                    scene_name         = renderer.gameObject.scene.name,
+                    scene_path         = renderer.gameObject.scene.path,
                     submesh_index      = submeshIndex,
                     shared_with_others = renderersShareMaterial,
                     mode               = rendererInstancedMode

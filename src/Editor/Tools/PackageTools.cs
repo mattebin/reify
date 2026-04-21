@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
+using PackageManagerPackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace Reify.Editor.Tools
 {
@@ -165,16 +166,16 @@ namespace Reify.Editor.Tools
             return $"{operation} failed: {message}";
         }
 
-        private static Dictionary<string, PackageInfo> InstalledPackagesByName()
+        private static Dictionary<string, PackageManagerPackageInfo> InstalledPackagesByName()
         {
-            var map = new Dictionary<string, PackageInfo>(StringComparer.OrdinalIgnoreCase);
-            var installed = PackageInfo.GetAllRegisteredPackages();
+            var map = new Dictionary<string, PackageManagerPackageInfo>(StringComparer.OrdinalIgnoreCase);
+            var installed = PackageManagerPackageInfo.GetAllRegisteredPackages();
             foreach (var package in installed)
                 map[package.name] = package;
             return map;
         }
 
-        private static bool MatchesQuery(PackageInfo package, string query)
+        private static bool MatchesQuery(PackageManagerPackageInfo package, string query)
         {
             if (string.IsNullOrWhiteSpace(query)) return true;
             return Contains(package.name, query) ||
@@ -192,7 +193,7 @@ namespace Reify.Editor.Tools
              version.IndexOf("-pre", StringComparison.OrdinalIgnoreCase) >= 0 ||
              version.IndexOf("-exp", StringComparison.OrdinalIgnoreCase) >= 0);
 
-        private static object PackageSummary(PackageInfo package, Dictionary<string, PackageInfo> installed)
+        private static object PackageSummary(PackageManagerPackageInfo package, Dictionary<string, PackageManagerPackageInfo> installed)
         {
             var isInstalled = installed.TryGetValue(package.name, out var installedInfo);
             return new
