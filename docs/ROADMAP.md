@@ -16,8 +16,8 @@ against Unity's API in its own structured-state-first philosophy.
 - [x] Ping / scene-list (Phase A)
 - [ ] Scene management (open, save, create, hierarchy tree with pagination)
 - [x] GameObjects (create, delete, duplicate, reparent, activate, transform) *(create/find/destroy/modify shipped 2026-04-21; duplicate deferred)*
-- [~] Components (add, remove, get/set serialized properties, wire references) *(add + get shipped 2026-04-21; remove/set deferred)*
-- [ ] Assets (list, import, delete, search, prefabs, materials)
+- [x] Components (add, remove, get/set serialized properties, wire references) *(add/get/modify/remove/set-property shipped 2026-04-21)*
+- [x] Assets (list, import, delete, search, prefabs, materials) *(find/create/delete/get/rename/move shipped 2026-04-21; prefab tooling in its own batch)*
 - [ ] Scripts (create, read, update C#)
 - [ ] Play Mode control
 - [ ] Editor operations (execute menu item, undo/redo, editor state)
@@ -25,7 +25,7 @@ against Unity's API in its own structured-state-first philosophy.
 - [ ] Console log read/clear
 - [ ] Tags & Layers
 - [ ] Selection
-- [ ] Prefab mode (open, close, overrides, apply/revert)
+- [x] Prefab mode (open, close, overrides, apply/revert) *(create/instantiate/open/close/get-overrides/apply-overrides/revert-overrides shipped 2026-04-21)*
 
 ### Advanced (Phase C — Philosophy Tools + Expanded Coverage)
 - [ ] Animation (clips, controllers, parameters, play) — AND philosophy tool: animator-state introspection
@@ -52,7 +52,7 @@ against Unity's API in its own structured-state-first philosophy.
 
 ### reify-specific Philosophy Tools (Phase C — the differentiator)
 - [x] mesh-native-bounds — report mesh native dimensions BEFORE placement to eliminate scale-guessing *(shipped 2026-04-21, Phase B)*
-- [ ] material-inspect — distinguish asset-backed materials vs MaterialPropertyBlocks, report override source
+- [x] material-inspect — distinguish asset-backed materials vs MaterialPropertyBlocks, report override source *(shipped 2026-04-21, second Phase C philosophy tool)*
 - [ ] urp-pipeline-state — inspect URP asset config, diagnose why skybox/features not rendering
 - [ ] render-queue-audit — report render queue, sorting layer, depth conflicts across scene
 - [ ] animator-state/graph — current state, parameters, transitions, blend tree values as JSON

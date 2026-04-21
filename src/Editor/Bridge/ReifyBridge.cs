@@ -65,6 +65,8 @@ namespace Reify.Editor.Bridge
             Register("prefab-apply-overrides",  args => Tools.PrefabTools.ApplyOverrides(args));
             Register("prefab-revert-overrides", args => Tools.PrefabTools.RevertOverrides(args));
 
+            Register("material-inspect", args => Tools.MaterialInspectTool.Handle(args));
+
             Start();
         }
 
