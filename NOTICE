@@ -1,0 +1,74 @@
+unity-mcp-personal
+Copyright 2026 Matteo (king) and contributors.
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full license text.
+
+================================================================================
+Third-party attribution
+================================================================================
+
+This project is a personal, opinionated fork that draws on and will incorporate
+code from the following upstream projects. Their original LICENSE texts are
+preserved verbatim under /third_party/:
+
+--------------------------------------------------------------------------------
+CoplayDev/unity-mcp
+--------------------------------------------------------------------------------
+  Source:     https://github.com/CoplayDev/unity-mcp
+  License:    MIT License
+  Copyright:  Copyright (c) 2025 CoplayDev
+  LICENSE:    /third_party/coplay-LICENSE.md
+
+The MIT License permits sublicensing under Apache 2.0 so long as the original
+copyright and permission notice are retained. That notice is reproduced in
+/third_party/coplay-LICENSE.md. When code from CoplayDev/unity-mcp is ported
+into /src/, the porting commit message and source-file header should reference
+the origin file path and commit SHA from the upstream repository.
+
+--------------------------------------------------------------------------------
+IvanMurzak/Unity-MCP
+--------------------------------------------------------------------------------
+  Source:     https://github.com/IvanMurzak/Unity-MCP
+  License:    Apache License, Version 2.0
+  Copyright:  Copyright (c) 2025 Ivan Murzak
+  LICENSE:    /third_party/murzak-LICENSE.md
+
+Apache 2.0 requires that any modifications to files carrying the Apache notice
+be marked as such, and that the NOTICE file of upstream be preserved if one
+exists. As of this writing, IvanMurzak/Unity-MCP does not ship a separate
+NOTICE file; its attribution lives in per-file headers of the form:
+
+    /*
+     *  Author: Ivan Murzak (https://github.com/IvanMurzak)
+     *  Repository: GitHub (https://github.com/IvanMurzak/Unity-MCP)
+     *  Copyright (c) 2025 Ivan Murzak
+     *  Licensed under the Apache License, Version 2.0.
+     *  See the LICENSE file in the project root for more information.
+     */
+
+When code from IvanMurzak/Unity-MCP is ported into /src/, these headers must
+be preserved or replaced with an equivalent attribution block that names the
+original author and the upstream file path / commit SHA.
+
+================================================================================
+Attribution policy for ported code
+================================================================================
+
+Every source file in /src/ whose content is wholly or partially derived from
+an upstream project must begin with a header comment identifying:
+
+  1. The upstream project name.
+  2. The upstream file path.
+  3. The upstream commit SHA at the time of porting.
+  4. The upstream license.
+  5. A short note about what was changed (paraphrased/rewritten/unchanged).
+
+Example:
+  /*
+   *  Ported from: CoplayDev/unity-mcp
+   *  Path:        MCPForUnity/Editor/Tools/Animation/AnimatorRead.cs
+   *  Commit:      <sha>
+   *  License:     MIT (see /third_party/coplay-LICENSE.md)
+   *  Changes:     Extracted structured-state projection; dropped screenshot hook.
+   */

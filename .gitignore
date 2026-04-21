@@ -1,0 +1,41 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Python (for eventual server work)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.local
+.pytest_cache/
+.ruff_cache/
+
+# Node (for eventual CLI work)
+node_modules/
+.npm/
+dist/
+build/
+
+# Unity (if we end up bundling a test project)
+Library/
+Temp/
+Obj/
+Logs/
+*.csproj
+*.sln
+*.unityproj
+*.suo
+*.user
+
+# Local scratch
+.scratch/
+TODO.local.md
