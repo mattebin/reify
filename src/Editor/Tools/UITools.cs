@@ -421,9 +421,21 @@ namespace Reify.Editor.Tools
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                var es = EventSystem.current
-                    ?? throw new InvalidOperationException(
-                        "No EventSystem.current — scene has no EventSystem. Add one via GameObject > UI > Event System.");
+                // EventSystem.current is the runtime-set singleton; it's null
+                // in edit mode until the component's Awake fires. Fall back
+                // to scanning the scene for any EventSystem so the tool works
+                // without entering play mode.
+                var es = EventSystem.current;
+                if (es == null)
+                {
+                    #pragma warning disable CS0618
+                    var all = UnityEngine.Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None);
+                    #pragma warning restore CS0618
+                    if (all.Length == 0)
+                        throw new InvalidOperationException(
+                            "No EventSystem found in any loaded scene. Create one via GameObject > UI > Event System, or add the EventSystem component to a GameObject.");
+                    es = all[0];
+                }
 
                 var pointer = new PointerEventData(es) { position = new Vector2(x, y) };
                 var results = new List<RaycastResult>();
