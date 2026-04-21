@@ -40,6 +40,12 @@ namespace Reify.Editor.Bridge
             Register("scene-save",   args => Tools.SceneSaveTool.Handle(args));
             Register("scene-create", args => Tools.SceneCreateTool.Handle(args));
             Register("mesh-native-bounds", args => Tools.MeshNativeBoundsTool.Handle(args));
+            Register("gameobject-create",  args => Tools.GameObjectCreateTool.Handle(args));
+            Register("gameobject-find",    args => Tools.GameObjectFindTool.Handle(args));
+            Register("gameobject-destroy", args => Tools.GameObjectDestroyTool.Handle(args));
+            Register("gameobject-modify",  args => Tools.GameObjectModifyTool.Handle(args));
+            Register("component-add",      args => Tools.ComponentAddTool.Handle(args));
+            Register("component-get",      args => Tools.ComponentGetTool.Handle(args));
 
             Start();
         }

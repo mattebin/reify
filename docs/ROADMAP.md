@@ -15,8 +15,8 @@ against Unity's API in its own structured-state-first philosophy.
 ### Core (Phase B)
 - [x] Ping / scene-list (Phase A)
 - [ ] Scene management (open, save, create, hierarchy tree with pagination)
-- [ ] GameObjects (create, delete, duplicate, reparent, activate, transform)
-- [ ] Components (add, remove, get/set serialized properties, wire references)
+- [x] GameObjects (create, delete, duplicate, reparent, activate, transform) *(create/find/destroy/modify shipped 2026-04-21; duplicate deferred)*
+- [~] Components (add, remove, get/set serialized properties, wire references) *(add + get shipped 2026-04-21; remove/set deferred)*
 - [ ] Assets (list, import, delete, search, prefabs, materials)
 - [ ] Scripts (create, read, update C#)
 - [ ] Play Mode control
