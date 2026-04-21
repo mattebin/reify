@@ -78,16 +78,26 @@ namespace Reify.Editor.Tools
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                // Undo.GetRecords has been public since Unity 2020.1; uses
-                // List<string> overload in newer versions.
+                // Undo.GetRecords exists on some Unity versions as a public
+                // API and on others only via reflection. Try reflection so
+                // this compiles across the 2021.3 → 6.x range we target.
                 var undoList = new List<string>();
                 var redoList = new List<string>();
-                try { UnityEditor.Undo.GetRecords(undoList, redoList); }
-                catch (Exception ex)
+                var m = typeof(UnityEditor.Undo).GetMethod("GetRecords",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public,
+                    null, new[] { typeof(List<string>), typeof(List<string>) }, null);
+                if (m != null)
                 {
-                    throw new InvalidOperationException(
-                        $"Undo.GetRecords failed (Unity API change?): {ex.Message}");
+                    try { m.Invoke(null, new object[] { undoList, redoList }); }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(
+                            $"Undo.GetRecords invocation failed: {ex.Message}");
+                    }
                 }
+                // If the method isn't present, undoList/redoList stay empty
+                // — the response still carries current_group_* so the caller
+                // gets the most useful single piece of state.
 
                 return new
                 {

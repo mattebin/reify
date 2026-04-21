@@ -41,7 +41,8 @@ namespace Reify.Editor.Tools
                     },
                     scripting_backend = PlayerSettings.GetScriptingBackend(
                                             UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(group)).ToString(),
-                    api_compatibility_level = PlayerSettings.GetApiCompatibilityLevel(group).ToString(),
+                    api_compatibility_level = PlayerSettings.GetApiCompatibilityLevel(
+                                            UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(group)).ToString(),
                     build_target            = target.ToString(),
                     build_target_group      = group.ToString(),
                     color_space             = PlayerSettings.colorSpace.ToString(),

@@ -134,7 +134,9 @@ namespace Reify.Editor.Tools
                     {
                         normalized_time = transitInfo.normalizedTime,
                         duration        = transitInfo.duration,
-                        user_name       = transitInfo.name
+                        full_path_hash  = transitInfo.fullPathHash,
+                        user_name_hash  = transitInfo.userNameHash,
+                        name_hash       = transitInfo.nameHash
                     } : null
                 });
             }
