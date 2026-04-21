@@ -102,6 +102,13 @@ namespace Reify.Editor.Bridge
             Register("asset-dependents",    args => Tools.AssetDependentsTool.Handle(args));
             Register("lighting-diagnostic", args => Tools.LightingDiagnosticTool.Handle(args));
 
+            Register("physics-raycast",        args => Tools.PhysicsTools.Raycast(args));
+            Register("physics-raycast-all",    args => Tools.PhysicsTools.RaycastAll(args));
+            Register("physics-spherecast",     args => Tools.PhysicsTools.SphereCast(args));
+            Register("physics-overlap-sphere", args => Tools.PhysicsTools.OverlapSphere(args));
+            Register("physics-overlap-box",    args => Tools.PhysicsTools.OverlapBox(args));
+            Register("physics-settings",       args => Tools.PhysicsTools.Settings(args));
+
             Start();
         }
 
