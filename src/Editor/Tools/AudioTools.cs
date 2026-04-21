@@ -377,7 +377,6 @@ namespace Reify.Editor.Tools
                         importer_type              = importer.GetType().FullName,
                         force_to_mono              = importer.forceToMono,
                         load_in_background         = importer.loadInBackground,
-                        preload_audio_data         = importer.preloadAudioData,
                         ambisonic                  = importer.ambisonic,
                         default_sample_settings    = new
                         {
