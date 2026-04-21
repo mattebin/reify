@@ -78,6 +78,10 @@ namespace Reify.Editor.Bridge
             Register("scene-query",     args => Tools.SceneHierarchyTools.Query(args));
             Register("scene-stats",     args => Tools.SceneHierarchyTools.Stats(args));
 
+            Register("console-log-read",               args => Tools.ConsoleLogTools.Read(args));
+            Register("console-log-clear",              args => Tools.ConsoleLogTools.Clear(args));
+            Register("console-log-subscribe-snapshot", args => Tools.ConsoleLogTools.SubscribeSnapshot(args));
+
             Start();
         }
 
