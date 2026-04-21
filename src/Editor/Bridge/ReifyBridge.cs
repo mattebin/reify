@@ -109,6 +109,10 @@ namespace Reify.Editor.Bridge
             Register("physics-overlap-box",    args => Tools.PhysicsTools.OverlapBox(args));
             Register("physics-settings",       args => Tools.PhysicsTools.Settings(args));
 
+            Register("animator-parameter-set", args => Tools.AnimatorMutationTools.ParameterSet(args));
+            Register("animator-crossfade",     args => Tools.AnimatorMutationTools.CrossFade(args));
+            Register("animator-play",          args => Tools.AnimatorMutationTools.Play(args));
+
             Start();
         }
 
