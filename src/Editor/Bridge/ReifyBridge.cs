@@ -67,6 +67,13 @@ namespace Reify.Editor.Bridge
 
             Register("material-inspect", args => Tools.MaterialInspectTool.Handle(args));
 
+            Register("play-mode-enter",  args => Tools.PlayModeTools.Enter(args));
+            Register("play-mode-exit",   args => Tools.PlayModeTools.Exit(args));
+            Register("play-mode-pause",  args => Tools.PlayModeTools.Pause(args));
+            Register("play-mode-resume", args => Tools.PlayModeTools.Resume(args));
+            Register("play-mode-step",   args => Tools.PlayModeTools.Step(args));
+            Register("play-mode-status", args => Tools.PlayModeTools.StatusTool(args));
+
             Start();
         }
 
