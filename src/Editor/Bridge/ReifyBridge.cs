@@ -82,6 +82,13 @@ namespace Reify.Editor.Bridge
             Register("console-log-clear",              args => Tools.ConsoleLogTools.Clear(args));
             Register("console-log-subscribe-snapshot", args => Tools.ConsoleLogTools.SubscribeSnapshot(args));
 
+            Register("editor-menu-execute",   args => Tools.EditorOpsTools.MenuExecute(args));
+            Register("editor-undo",           args => Tools.EditorOpsTools.Undo(args));
+            Register("editor-redo",           args => Tools.EditorOpsTools.Redo(args));
+            Register("editor-undo-history",   args => Tools.EditorOpsTools.UndoHistory(args));
+            Register("editor-selection-get",  args => Tools.EditorOpsTools.SelectionGet(args));
+            Register("editor-selection-set",  args => Tools.EditorOpsTools.SelectionSet(args));
+
             Start();
         }
 
