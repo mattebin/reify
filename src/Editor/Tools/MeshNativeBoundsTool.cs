@@ -53,8 +53,13 @@ namespace Reify.Editor.Tools
 
         private static object ForInstanceId(int instanceId)
         {
+            // Unity 6 renamed this to EntityIdToObject but the old name still
+            // works and is the only one that exists on the 2021.3 floor in
+            // package.json. Revisit when the minimum Unity version moves.
+            #pragma warning disable CS0618
             var obj = EditorUtility.InstanceIDToObject(instanceId)
                 ?? throw new InvalidOperationException($"No object with instance_id {instanceId}");
+            #pragma warning restore CS0618
 
             return obj switch
             {
