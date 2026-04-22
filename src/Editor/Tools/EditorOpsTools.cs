@@ -4,12 +4,40 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Reify.Editor.Bridge;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
 
 namespace Reify.Editor.Tools
 {
     internal static class EditorOpsTools
     {
+        // ---------- editor-request-script-compilation ----------
+        // When Unity is in the background, saved-file changes don't trigger
+        // a script recompile until the editor regains focus. That blocks
+        // any reify-driven fix cycle. This tool calls the official
+        // CompilationPipeline.RequestScriptCompilation so callers can
+        // remotely re-compile and re-load the new assembly.
+        [ReifyTool("editor-request-script-compilation")]
+        public static Task<object> RequestScriptCompilation(JToken _)
+        {
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                // RequestScriptCompilation (RequestScriptCompilationOptions)
+                // exists on 2021.2+ and is the supported API. It's async —
+                // callers should poll domain-reload-status to know when the
+                // new assembly is live.
+                CompilationPipeline.RequestScriptCompilation();
+                return new
+                {
+                    requested      = true,
+                    note           = "Script compilation requested. Poll domain-reload-status " +
+                                     "until last_compile_finished_utc advances past read_at_utc.",
+                    read_at_utc    = DateTime.UtcNow.ToString("o"),
+                    frame          = (long)Time.frameCount
+                };
+            });
+        }
+
         // ---------- editor-menu-execute ----------
         [ReifyTool("editor-menu-execute")]
         public static Task<object> MenuExecute(JToken args)
