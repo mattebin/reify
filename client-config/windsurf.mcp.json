@@ -3,7 +3,7 @@
     "reify": {
       "command": "C:\\Program Files\\dotnet\\dotnet.exe",
       "args": [
-        "C:\\Users\\Matte\\Desktop\\Claude Brain\\reify\\src\\Server\\bin\\Release\\net8.0\\reify-server.dll"
+        "<PATH_TO_REIFY>\\src\\Server\\bin\\Release\\net8.0\\reify-server.dll"
       ],
       "env": {
         "REIFY_BRIDGE_PORT": "17777"

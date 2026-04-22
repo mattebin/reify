@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "reify": {
-      "command": "C:\\Users\\Matte\\Desktop\\Claude Brain\\reify\\src\\Server\\bin\\Release\\net8.0\\publish\\reify-server.exe",
+      "command": "<PATH_TO_REIFY>\\src\\Server\\bin\\Release\\net8.0\\publish\\reify-server.exe",
       "args": [],
       "env": {
         "REIFY_BRIDGE_PORT": "17777"

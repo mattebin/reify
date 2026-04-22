@@ -5,7 +5,7 @@
       "args": [
         "run",
         "--project",
-        "C:\\Users\\Matte\\Desktop\\Claude Brain\\reify\\src\\Server\\Reify.Server.csproj",
+        "<PATH_TO_REIFY>\\src\\Server\\Reify.Server.csproj",
         "--no-launch-profile",
         "--"
       ],
