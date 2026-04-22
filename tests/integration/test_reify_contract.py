@@ -202,6 +202,52 @@ def test_gap_utility_reads():
     assert components["component_type_count"] > 0
 
 
+def test_spatial_primitive_evidence_smoke():
+    """Spatial evidence returns bounds, anchors, and transform basis."""
+    name = f"_spatial_{int(time.time() * 1000)}"
+    ok(call("gameobject-create", {"name": name, "primitive": "Cube"}))
+    try:
+        d = ok(call("spatial-primitive-evidence", {"gameobject_path": name}))
+        primitive = d["primitive"]
+        assert primitive["instance_id"]
+        assert primitive["path"] == name
+        assert primitive["primitive_kind"] == "Cube"
+        assert abs(primitive["height_world"] - 1.0) < 1e-4
+        assert "top" in primitive["anchors_world"]
+        assert "bottom" in primitive["anchors_world"]
+        assert "up" in primitive["transform"]
+        assert "lossy_scale" in primitive["transform"]
+    finally:
+        ok(call("gameobject-destroy", {"path": name}))
+
+
+def test_spatial_anchor_distance_touching_cubes():
+    """Anchor distance proves exact cube contact instead of eyeballing it."""
+    suffix = int(time.time() * 1000)
+    lower = f"_lower_{suffix}"
+    upper = f"_upper_{suffix}"
+    ok(call("gameobject-create", {"name": lower, "primitive": "Cube"}))
+    ok(call("gameobject-create", {
+        "name": upper,
+        "primitive": "Cube",
+        "position": {"x": 0.0, "y": 1.0, "z": 0.0}
+    }))
+    try:
+        d = ok(call("spatial-anchor-distance", {
+            "a_path": lower,
+            "a_anchor": "top",
+            "b_path": upper,
+            "b_anchor": "bottom",
+            "tolerance": 0.001
+        }))
+        assert d["within_tolerance"] is True
+        assert d["distance_meters"] < 1e-4
+        assert d["axis_gap_meters"]["y"] < 1e-4
+    finally:
+        ok(call("gameobject-destroy", {"path": upper}))
+        ok(call("gameobject-destroy", {"path": lower}))
+
+
 def test_scene_set_active_unload_roundtrip():
     """scene-set-active and scene-unload work together in a safe additive flow."""
     settings = ok(call("project-build-settings"))
