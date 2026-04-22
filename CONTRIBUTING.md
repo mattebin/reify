@@ -30,8 +30,12 @@ Every new tool ships at minimum:
    applicable). No silent fallbacks.
 5. Structural rejection on ambiguous identity — throw with concrete
    candidate instance_ids instead of picking one.
-6. For writes: `Undo` integration + `{applied, before, after}` response
-   shape for read-back verification.
+6. For writes: `Undo` integration + self-proving receipt per
+   [`ADR-002`](docs/decisions/ADR-002-write-receipts.md):
+   `applied_fields[]` with `{field, before, after}` pairs, plus
+   domain-specific evidence (`guids_touched[]` for asset writes,
+   `mesh_bounds` + `primitive_defaults` for primitive creates, etc.).
+   Silent no-ops and rubber-stamp receipts are rejected in review.
 
 ## Repo layout
 

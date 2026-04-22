@@ -49,8 +49,51 @@ namespace Reify.Editor.Tools
                 go.transform.localEulerAngles = rotation;
                 go.transform.localScale      = scale;
 
-                return GameObjectDto.Wrap(GameObjectDto.Build(go, includeComponents: true));
+                // When a primitive was created, surface the mesh's intrinsic
+                // dimensions. Otherwise the caller has to Google "what are
+                // the default dimensions of Unity's Sphere primitive" — the
+                // answer is on reify's disk.
+                var meshBounds = ReadMeshBounds(go);
+                var primitiveDims = PrimitiveDefaults.For(primitive);
+
+                var dto = GameObjectDto.Build(go, includeComponents: true);
+                return new
+                {
+                    gameobject          = dto,
+                    primitive           = primitive,
+                    primitive_defaults  = primitiveDims,   // intrinsic, unscaled
+                    mesh_bounds         = meshBounds,       // from Renderer, in local space
+                    world_height        = meshBounds != null ? meshBounds.size_world_y : (float?)null,
+                    read_at_utc         = DateTime.UtcNow.ToString("o"),
+                    frame               = (long)Time.frameCount
+                };
             });
+        }
+
+        private sealed class MeshBoundsDto
+        {
+            public object local_center;
+            public object local_size;
+            public object local_extents;
+            public object world_center;
+            public object world_size;
+            public float  size_world_y;
+        }
+
+        private static MeshBoundsDto ReadMeshBounds(GameObject go)
+        {
+            if (!go.TryGetComponent<Renderer>(out var r)) return null;
+            var lb = r.localBounds;      // mesh-local bounds, before world transform
+            var wb = r.bounds;           // world-space AABB after scale/rotation
+            return new MeshBoundsDto
+            {
+                local_center  = new { x = lb.center.x,  y = lb.center.y,  z = lb.center.z  },
+                local_size    = new { x = lb.size.x,    y = lb.size.y,    z = lb.size.z    },
+                local_extents = new { x = lb.extents.x, y = lb.extents.y, z = lb.extents.z },
+                world_center  = new { x = wb.center.x,  y = wb.center.y,  z = wb.center.z  },
+                world_size    = new { x = wb.size.x,    y = wb.size.y,    z = wb.size.z    },
+                size_world_y  = wb.size.y
+            };
         }
 
         private static Vector3? ReadVec3(JToken token)
