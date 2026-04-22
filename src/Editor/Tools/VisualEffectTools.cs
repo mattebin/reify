@@ -21,13 +21,29 @@ namespace Reify.Editor.Tools
     {
         private const string VfxAsm = "Unity.VisualEffectGraph.Runtime";
 
+        /// <summary>
+        /// Look up a type across every loaded assembly rather than a
+        /// hard-coded assembly-qualified name. Package-gated reflection
+        /// needs to survive Unity minor-version assembly-renames.
+        /// </summary>
+        private static Type FindType(string fullName)
+        {
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type t = null;
+                try { t = asm.GetType(fullName, false); } catch { }
+                if (t != null) return t;
+            }
+            return null;
+        }
+
         // ---------- visual-effect-inspect ----------
         [ReifyTool("visual-effect-inspect")]
         public static Task<object> Inspect(JToken args)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                var vfxType = Type.GetType($"UnityEngine.VFX.VisualEffect, {VfxAsm}")
+                var vfxType = FindType("UnityEngine.VFX.VisualEffect")
                     ?? throw new InvalidOperationException(
                         "UnityEngine.VFX.VisualEffect not loaded — install " +
                         "com.unity.visualeffectgraph to use this tool.");
@@ -53,7 +69,7 @@ namespace Reify.Editor.Tools
                     if (getParameters != null)
                     {
                         // Signature: void GetExposedProperties(List<VFXExposedProperty> outProps)
-                        var exposedType = Type.GetType($"UnityEngine.VFX.VFXExposedProperty, {VfxAsm}");
+                        var exposedType = FindType("UnityEngine.VFX.VFXExposedProperty");
                         if (exposedType != null)
                         {
                             var listType = typeof(List<>).MakeGenericType(exposedType);
@@ -110,7 +126,7 @@ namespace Reify.Editor.Tools
                     !path.EndsWith(".vfxoperator", StringComparison.OrdinalIgnoreCase))
                     throw new ArgumentException("visual-effect-asset-inspect expects a .vfx asset.");
 
-                var assetType = Type.GetType($"UnityEngine.VFX.VisualEffectAsset, {VfxAsm}")
+                var assetType = FindType("UnityEngine.VFX.VisualEffectAsset")
                     ?? throw new InvalidOperationException(
                         "UnityEngine.VFX.VisualEffectAsset not loaded — install com.unity.visualeffectgraph.");
 

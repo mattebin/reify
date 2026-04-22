@@ -15,8 +15,19 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class FrameDebuggerTools
     {
+        // In Unity 6 the type moved out of the UnityEditor.dll assembly.
+        // Scan every loaded assembly by full name so we don't hard-code
+        // a specific assembly-qualified name.
         private static readonly Lazy<Type> Util = new(() =>
-            Type.GetType("UnityEditorInternal.FrameDebuggerUtility, UnityEditor"));
+        {
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type t = null;
+                try { t = asm.GetType("UnityEditorInternal.FrameDebuggerUtility", false); } catch { }
+                if (t != null) return t;
+            }
+            return null;
+        });
 
         // ---------- frame-debugger-status ----------
         [ReifyTool("frame-debugger-status")]
