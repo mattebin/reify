@@ -90,6 +90,110 @@ namespace Reify.Editor.Tools
             });
         }
 
+        // ---------- build-execute-job ----------
+        // Non-blocking variant: returns a job_id immediately, runs the
+        // build on the next editor frame, and lets the caller poll
+        // job-status / job-result. Use this for anything non-trivial —
+        // a Standalone build is minutes of work and will time out MCP
+        // clients on sync.
+        [ReifyTool("build-execute-job")]
+        public static Task<object> ExecuteJob(JToken args)
+        {
+            var outputPath = args?.Value<string>("output_path")
+                ?? throw new ArgumentException("output_path is required.");
+            var scenesArr  = args?["scenes"] as JArray;
+            var development = args?.Value<bool?>("development") ?? false;
+            var autoRun     = args?.Value<bool?>("auto_run_player") ?? false;
+
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                var job = ReifyJobs.Start("build");
+                ReifyJobs.SetRunning(job, "build queued", 0f);
+
+                // Capture enabled scenes + args on the request thread so
+                // the delay-called lambda doesn't race against subsequent
+                // EditorBuildSettings mutations.
+                string[] scenes;
+                if (scenesArr != null && scenesArr.Count > 0)
+                {
+                    var list = new List<string>();
+                    foreach (var s in scenesArr) list.Add(s.Value<string>());
+                    scenes = list.ToArray();
+                }
+                else
+                {
+                    var all = EditorBuildSettings.scenes;
+                    var enabled = new List<string>();
+                    foreach (var s in all) if (s.enabled) enabled.Add(s.path);
+                    if (enabled.Count == 0)
+                    {
+                        ReifyJobs.Fail(job,
+                            "No scenes provided and no enabled scenes in EditorBuildSettings.");
+                        return new { job = ReifyJobs.Serialize(job) };
+                    }
+                    scenes = enabled.ToArray();
+                }
+
+                EditorApplication.delayCall += () =>
+                {
+                    try
+                    {
+                        ReifyJobs.SetRunning(job, "BuildPipeline.BuildPlayer running", -1f);
+                        var target = EditorUserBuildSettings.activeBuildTarget;
+                        var options = BuildOptions.None;
+                        if (development) options |= BuildOptions.Development;
+                        if (autoRun)     options |= BuildOptions.AutoRunPlayer;
+
+                        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+                        {
+                            scenes = scenes, locationPathName = outputPath,
+                            target = target, options = options
+                        });
+                        var s = report.summary;
+                        var errorCount = 0; var warningCount = 0;
+                        foreach (var step in report.steps)
+                            foreach (var msg in step.messages)
+                            {
+                                if (msg.type == LogType.Error || msg.type == LogType.Exception) errorCount++;
+                                else if (msg.type == LogType.Warning) warningCount++;
+                            }
+
+                        ReifyJobs.Succeed(job, new
+                        {
+                            target              = target.ToString(),
+                            output_path         = outputPath,
+                            scenes              = scenes,
+                            development,
+                            auto_run_player     = autoRun,
+                            result              = s.result.ToString(),
+                            platform            = s.platform.ToString(),
+                            total_size_bytes    = (long)s.totalSize,
+                            total_time_seconds  = s.totalTime.TotalSeconds,
+                            build_started_utc   = s.buildStartedAt.ToUniversalTime().ToString("o"),
+                            build_ended_utc     = s.buildEndedAt.ToUniversalTime().ToString("o"),
+                            total_errors        = s.totalErrors,
+                            total_warnings      = s.totalWarnings,
+                            step_error_count    = errorCount,
+                            step_warning_count  = warningCount,
+                            step_count          = report.steps?.Length ?? 0
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        ReifyJobs.Fail(job, $"{ex.GetType().Name}: {ex.Message}");
+                    }
+                };
+
+                return new
+                {
+                    job          = ReifyJobs.Serialize(job, includeResult: false, includeEvents: false),
+                    note         = "Build queued. Poll job-status / job-result with the job_id.",
+                    read_at_utc  = DateTime.UtcNow.ToString("o"),
+                    frame        = (long)Time.frameCount
+                };
+            });
+        }
+
         // ---------- build-execute ----------
         [ReifyTool("build-execute")]
         public static Task<object> Execute(JToken args)
