@@ -1,130 +1,213 @@
 # reify
 
-> Structured state for Unity, for LLMs that reason.
+A Unity MCP server that exposes the Unity Editor as **code-shaped evidence** — 230+ tools returning structured JSON so an LLM can diff, grep, and verify instead of squinting at screenshots. Editor-only, opinionated, validated live against **Unity 6000.4.3f1**.
 
-## What this is
+> 🛑 **READ THIS FIRST — reify is an evidence + guides discipline, not a toolbox.**
+>
+> The tools look like they work even when they don't. An LLM that skips the docs will trip the known failure modes in [`docs/AGENT_TRAPS.md`](docs/AGENT_TRAPS.md) within a dozen calls. If your agent just connected to reify, call `reify-orient` (one MCP call, ~1 second, returns the whole reading list) before the first write.
 
-`reify` is a Unity MCP stack built for API agents that need structured,
-code-grounded evidence instead of screenshots, inspector eyeballing, or
-free-form summaries. The project exposes Unity Editor state as machine-readable
-JSON so an agent can reason from identifiers, numbers, timestamps, frame
-context, and read-back verification.
+> ⚠️ **Honest disclaimer.**
+> - **Editor-only.** reify runs inside the Unity Editor. It does not ship to built players. No runtime gameplay hooks.
+> - **One Unity version battle-tested.** Live-validated on Unity `6000.4.3f1`. Other versions probably work (reflection is version-tolerant for known drift points) but the contract suite only runs against 6.
+> - **Opinionated writes.** Write tools reject silent no-ops (per [ADR-002](docs/decisions/ADR-002-write-receipts.md)) and spatial claims require anchor proofs (per [ADR-003](docs/decisions/ADR-003-spatial-claims.md)). If your agent is used to rubber-stamping "done!", reify will catch it.
+> - **If you want a plug-and-play productivity toolkit, try [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) or [IvanMurzak/Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) first.** reify prioritises *verifiability over breadth*. It overlaps those two on most domains, is ahead on evidence/trust, behind on installer polish.
 
-The guiding idea is simple:
+## How it works
 
-- screenshots are an escape hatch, not the default workflow
-- read tools should return evidence the model can diff, grep, and trust
-- write tools should verify by reading back through Unity's own code path
+```
+  LLM client ──► MCP stdio ──► .NET 8 server (Reify.Server)
+                                     │
+                                     ▼
+                         HTTP on 127.0.0.1:17777
+                                     │
+                                     ▼
+                      Unity Editor HttpListener bridge
+                                     │
+                 ┌───────────────────┼───────────────────┐
+                 ▼                   ▼                   ▼
+           read tools         write tools        evidence tools
+        (scene-snapshot,   (gameobject-modify, (spatial-primitive-
+         component-get,     component-set-      evidence,
+         asset-snapshot,    property,           spatial-anchor-
+         shader-inspect,    asset-create/       distance, scene-diff,
+         ...)               move/delete,        asset-diff,
+                            prefab-save, ...)   primitive-defaults)
+                                     │
+                                     ▼
+                           returns JSON with
+                           read_at_utc, frame,
+                           stable identifiers,
+                           before/after on writes
+```
 
-See [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md) for the longer thesis.
+Every tool call is a JSON request to `/tool` on the bridge. Every read returns evidence fields (`read_at_utc`, `frame`, stable IDs). Every write returns `applied_fields` with `{field, before, after}` per ADR-002. Spatial claims return anchor/bounds data you can check directly.
 
-## Current status
+## Install
 
-This repo is no longer a planning-only scaffold. The current local worktree
-contains:
+### Easy way — from prebuilt release
+1. Grab the latest `reify-server-<platform>.zip` or `.tar.gz` from the [Releases page](https://github.com/mattebin/reify/releases).
+2. Unzip somewhere permanent.
+3. Add the Unity Editor package to your project — in `Packages/manifest.json`:
+   ```json
+   "com.reify.unity": "https://github.com/mattebin/reify.git?path=/src/Editor"
+   ```
+4. Open your Unity project. Watch the Console for `[Reify] Bridge listening on http://127.0.0.1:17777/`.
+5. Point your MCP client at the unpacked `reify-server` binary. See `client-config/` for ready-to-go configs for [Claude Code](client-config/claude-code.mcp.json), [Cursor](client-config/cursor.mcp.json), [VS Code](client-config/vscode-mcp.json), [Windsurf](client-config/windsurf.mcp.json).
 
-- a .NET 8 MCP stdio server
-- a Unity Editor package (`com.reify.unity`)
-- a localhost HTTP bridge between the server and Unity
-- shared contracts used by the server transport
-- over **230** MCP tools (call `reify-tool-list` for the live inventory)
-- first-class MCP resources and prompts for discovery and guidance
+### From source (you want the latest or you want to contribute)
+```bash
+git clone https://github.com/mattebin/reify.git
+cd reify
+dotnet build src/Server/Reify.Server.csproj -c Release
+```
+Add the Unity package via a `file:` reference (see `client-config/README.md` for `<PATH_TO_REIFY>` substitution).
 
-Current local scope is broad editor-side coverage across roughly 56 domains,
-including scene/gameobject/component/asset/prefab work, scripts, packages,
-physics, animator, audio, navigation, UI, particles, profiler, tilemap,
-terrain, import settings, builds, scriptable objects, animation clips, input
-system, asmdefs, tests, project config writes, and meta/introspection layers.
+### Verify the install
 
-Highlights that reflect the project's philosophy:
+From any MCP client connected to reify:
+```
+ping                → { status: ok, unity_version: 6000.4.3f1, ... }
+reify-orient        → full orientation dump (thesis + loop + reading list)
+reify-self-check    → contract test battery, expect fail_count: 0
+reify-tool-list     → live inventory of all 230+ tools
+```
 
-- evidence-first tools like `mesh-native-bounds`, `material-inspect`,
-  `scene-query`, `render-queue-audit`, `domain-reload-status`,
-  `persistence-status`, and `structured-screenshot`
-- identity hardening and ambiguity rejection for scene/object/component lookup
-- async test jobs with `tests-run`, `tests-status`, `tests-results`, and
-  `tests-cancel`
-- code-evidence project pipeline tools such as `asmdef-inspect`,
-  `asmdef-update-or-create`, `project-tag-add`, and `project-layer-set`
-- `batch-execute`, `reify-tool-list`, `reify-version`,
-  `reflection-method-find`, and opt-in `reflection-method-call`
-- MCP resources such as `reify://about`, `reify://philosophy/structured-state`,
-  and `reify://tools/catalog`
-- MCP prompts for structured diagnosis, safe change loops, and capability
-  escalation
+If `ping` fails, the Unity Editor side isn't running yet. Open your project; wait for the bridge log line.
 
-Latest tools validated live against Unity `6000.4.3f1`. The python integration
-contract suite under `tests/integration/` covers the critical path (ping,
-read-evidence shape, write-receipt shape, error discrimination,
-spatial proofs, ADR-002 receipts).
+## What's in the toolbox
+
+Call `reify-tool-list` for the live list. A sampling:
+
+| Category | Tools |
+|---|---|
+| **Meta / orientation** | `reify-orient`, `reify-self-check`, `reify-tool-list`, `reify-version`, `ping`, `domain-reload-status` |
+| **Scene + GameObjects** | `scene-snapshot`, `scene-diff`, `scene-query`, `gameobject-create`, `gameobject-modify`, `gameobject-find`, `gameobject-duplicate`, `component-add`, `component-get`, `component-set-property`, `component-remove` |
+| **Spatial proofs** | `primitive-defaults`, `spatial-primitive-evidence`, `spatial-anchor-distance`, `geometry-line-primitive`, `mesh-native-bounds` |
+| **Assets + prefabs** | `asset-snapshot`, `asset-diff`, `asset-create`, `asset-move`, `asset-rename`, `asset-delete`, `asset-copy`, `asset-shader-list-all`, `prefab-create`, `prefab-save`, `material-inspect` |
+| **Rendering / graphics** | `shader-inspect`, `shader-graph-inspect`, `render-queue-audit`, `lighting-diagnostic`, `camera-inspect`, `light-inspect`, `structured-screenshot` (escape hatch) |
+| **Animation + VFX** | `animation-clip-inspect`, `animation-clip-events-read/set`, `animator-state`, `animator-parameter-set`, `animator-crossfade`, `particle-system-inspect`, `particle-play/stop/simulate`, `visual-effect-inspect`, `timeline-director-*` |
+| **Physics** | `physics-raycast`, `physics-spherecast`, `physics-overlap-*`, `physics-settings`, 2D variants |
+| **Scripts (Roslyn-backed)** | `script-inspect`, `script-execute`, `script-update-or-create`, `script-delete` |
+| **Async jobs** | `tests-run`, `tests-status`, `tests-results`, `build-execute-job`, `asset-refresh-job`, `addressables-build-job`, `job-list`, `job-cancel` |
+| **Remote Unity control** | `editor-request-script-compilation` (compile + domain reload without alt-tabbing), `editor-menu-execute`, `editor-selection-set` |
+| **Issue reporting** | `reify-log-issue`, `reify-list-pending-issues` (see below) |
+
+## LLM-reported issues (optional)
+
+Reify includes an issue-reporting loop for when an LLM hits a reify bug and wants the maintainer to know. **Completely optional** — skip this section if you don't care.
+
+### How it works
+```
+  LLM hits a problem using reify
+            │
+            ▼
+  calls  reify-log-issue  with { model_name, issue_title, effort, ... }
+            │
+            ▼
+  file written to  <reify_repo>/reports/llm-issues/pending/<timestamp>-<slug>.md
+            │
+            ▼
+  ⏸  waits for the user to review
+            │
+            ▼
+  user runs:   python scripts/review-llm-issues.py
+            │
+            ▼
+  for each pending report: [y]es / [n]o / [d]elete / [s]kip / [q]uit
+            │
+            ▼
+  on y: gh issue create --repo <your fork> --label llm-reported
+                          (you approve the identity + repo first)
+```
+
+### Why the user-in-the-loop gate
+LLMs are prolific; without a gate they'd flood any tracker with duplicates and half-baked reports. The review script:
+
+1. **Auto-detects your fork's repo** from `git remote get-url origin`. Your LLM's reports go to *your* tracker, not upstream.
+2. **Shows filing identity before the prompt** — `Filing target: <repo> / Filing as: <gh user>`. No silent posting.
+3. **Asks per-report** — you can say no, delete, skip, or quit.
+4. **Auto-creates the labels** (`llm-reported`, `severity:{info,warn,error,critical}`, `effort:{S,M,L}`, `reporter:<model_name>`) on first use.
+
+The LLM tool **never hits GitHub directly**. Everything is local markdown until you say otherwise.
+
+### Opting out entirely
+Just never run `scripts/review-llm-issues.py`. Pending reports accumulate in `reports/llm-issues/pending/` harmlessly — they're gitignored. Delete the folder, done. You can also tell your LLM "don't call reify-log-issue" in your system prompt if you want to prevent the reports from being written at all.
+
+See [`reports/llm-issues/README.md`](reports/llm-issues/README.md) for the full field schema and [`docs/AGENT_TRAPS.md`](docs/AGENT_TRAPS.md) for when an LLM should report.
+
+## Start here (reading order)
+
+In rough order of what to read first:
+
+1. [AGENTS.md](AGENTS.md) — operating loop for LLMs, 12 numbered rules
+2. [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md) — why evidence, not screenshots
+3. [docs/AGENT_TRAPS.md](docs/AGENT_TRAPS.md) — 5 observed LLM failure modes + one-line heuristics each
+4. [docs/decisions/ADR-001-tool-naming.md](docs/decisions/ADR-001-tool-naming.md), [ADR-002](docs/decisions/ADR-002-write-receipts.md), [ADR-003](docs/decisions/ADR-003-spatial-claims.md) — normative rules
+5. [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — install + substitute `<PATH_TO_REIFY>`
+6. [docs/AGENT_PLAYBOOKS.md](docs/AGENT_PLAYBOOKS.md) — client-specific setup
+7. [CONTRIBUTING.md](CONTRIBUTING.md) — add-a-tool contract
+8. [VALIDATION_STEPS.md](VALIDATION_STEPS.md) — explicit bootstrap checklist
+
+Total reading time: ~15 minutes. All short on purpose.
+
+## Testing
+
+Python contract suite against a live Unity:
+```bash
+python tests/integration/test_reify_contract.py
+# 19 passed, 0 failed
+```
+Runs ping, read-evidence shape, write-receipt shape (ADR-002), error code discrimination (`INVALID_ARGS` / `COMPONENT_NOT_FOUND` / `TOOL_EXCEPTION` / `UNKNOWN_TOOL`), spatial anchor proofs (ADR-003), and the `reify-self-check` tool. No pytest required — standalone runner.
+
+## Technical honesty
+
+- **reify does not make an LLM "good at Unity".** It makes an LLM's claims *checkable*. A sloppy agent still makes sloppy games, you just catch it one tool call earlier.
+- **Package-gated tools fail gracefully.** Addressables / Cinemachine / Timeline / VFX Graph / TextMeshPro / MPPM tools return a structured "package not installed" error when the package is absent, not an NRE.
+- **Unity version drift is a real risk.** Frame Debugger is currently broken on Unity 6 because the API moved (file an issue — `reify-log-issue`-reported ones land cleanly). Reflection-based tools scan all loaded assemblies to survive most assembly renames, but nothing is bulletproof.
+- **The bridge is localhost-only.** No auth, because `127.0.0.1:17777` is not exposed. Don't run reify on a shared machine where untrusted local processes could hit the port.
+- **If you find reify ignoring your args or silently succeeding**, that's the bug ADR-002 was written to prevent. File a `reify-log-issue`.
 
 ## Architecture
 
-- Client -> server: MCP over stdio
-- Server -> Unity: HTTP on `127.0.0.1:17777` by default
-- Unity side: `HttpListener` bridge + `MainThreadDispatcher`
-- Server side: official `ModelContextProtocol` C# SDK
-- Mutation policy: Unity `Undo` integration plus read-back verification where
-  practical
-- Robustness guards: bridge-side response-size cap and async polling for test
-  runs
+- Client → server: MCP over stdio
+- Server → Unity: HTTP on `127.0.0.1:17777`
+- Unity side: `HttpListener` bridge + `MainThreadDispatcher` for marshalling to the main thread
+- Server side: official [`ModelContextProtocol`](https://github.com/modelcontextprotocol/csharp-sdk) C# SDK
+- Mutation policy: Unity `Undo` integration + read-back verification + ADR-002 receipts
+- Bridge guards: response-size cap (`REIFY_MAX_RESPONSE_BYTES`, default 786432), `MissingComponentException` routed to `COMPONENT_NOT_FOUND`, `ArgumentException` routed to `INVALID_ARGS`, ISO-8601 string fields preserved verbatim (no DateTime auto-coercion)
 
 Primary code paths:
-
-- [src/Server/Program.cs](src/Server/Program.cs)
-- [src/Server/UnityClient.cs](src/Server/UnityClient.cs)
-- [src/Editor/Bridge/ReifyBridge.cs](src/Editor/Bridge/ReifyBridge.cs)
-- [src/Editor/Bridge/MainThreadDispatcher.cs](src/Editor/Bridge/MainThreadDispatcher.cs)
-
-## Why it exists
-
-The project takes inspiration from two major upstreams:
-
-- [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp)
-- [IvanMurzak/Unity-MCP](https://github.com/IvanMurzak/Unity-MCP)
-
-But the differentiator is not just combining tool coverage. The point is to
-make Unity state legible to an API agent:
-
-- mesh bounds before placement instead of scale guessing
-- material and MPB provenance instead of screenshot debugging
-- animator state as structured data instead of visual inference
-- render queue, scene query, persistence, and reload diagnostics as explicit
-  JSON
-- project structure, tests, and project settings as editable API surfaces
+- [src/Server/Program.cs](src/Server/Program.cs) — MCP entry
+- [src/Editor/Bridge/ReifyBridge.cs](src/Editor/Bridge/ReifyBridge.cs) — HTTP listener + error routing
+- [src/Editor/Bridge/MainThreadDispatcher.cs](src/Editor/Bridge/MainThreadDispatcher.cs) — main-thread marshalling with `Func<Task<T>>` support
+- [src/Editor/Tools/](src/Editor/Tools/) — all editor-side handlers
 
 ## Repo layout
 
-```text
+```
 reify/
-|-- client-config/         Claude Code MCP config examples
-|-- docs/                  philosophy, architecture, roadmap, and status docs
-|-- scripts/               upstream sync helpers
-|-- src/
-|   |-- Editor/            Unity Editor package, HTTP bridge, and handlers
-|   |-- Server/            .NET 8 MCP stdio server
-|   `-- Shared/            transport and argument contracts used by the server
-`-- third_party/           preserved upstream license texts
+├── client-config/          per-client MCP config examples (substitute <PATH_TO_REIFY>)
+├── docs/                   philosophy, architecture, agent playbooks, ADRs
+│   └── decisions/          ADR-001 (naming), ADR-002 (write receipts), ADR-003 (spatial claims)
+├── reports/llm-issues/     LLM-reported issues; pending/submitted/dismissed folders are gitignored
+├── scripts/                review-llm-issues.py + upstream sync helpers
+├── src/
+│   ├── Editor/             Unity Editor package, HTTP bridge, tool handlers
+│   ├── Server/             .NET 8 MCP stdio server
+│   └── Shared/             transport + argument contracts
+├── tests/integration/      Python contract suite (live Unity required)
+└── third_party/            preserved upstream license texts
 ```
 
-## Start here
+## Alternatives — pick the right one
 
-- [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md): bootstrap install and
-  smoke-test flow
-- [VALIDATION_STEPS.md](VALIDATION_STEPS.md): explicit bootstrap validation
-  checklist
-- [docs/NEXT_10_AND_TESTS.md](docs/NEXT_10_AND_TESTS.md): current ranked next
-  picks and top validation tests
-- [AGENTS.md](AGENTS.md): shortest universal instruction contract for LLMs
-- [docs/AGENT_PLAYBOOKS.md](docs/AGENT_PLAYBOOKS.md): client-tailored guidance
-  for Claude Code, Codex Desktop, Cursor, Windsurf, and VS Code MCP
-- [docs/ROADMAP.md](docs/ROADMAP.md): scope and next phases
-- [docs/SESSION_REPORT.md](docs/SESSION_REPORT.md): current repo-facing status
-  snapshot
-- [docs/decisions/ADR-001-tool-naming.md](docs/decisions/ADR-001-tool-naming.md):
-  tool naming and response-shape conventions
+| You want | Use |
+|---|---|
+| Evidence-first, receipts, opinionated spatial correctness, LLM client IS the UI | **reify** (you are here) |
+| Fastest setup, polished UX, broadest "just works" domain coverage | [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) |
+| Runtime hooks, broader ecosystem, C# at runtime | [IvanMurzak/Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) |
+| A plug-and-play Unity assistant with no discipline requirement | not reify |
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE), [NOTICE](NOTICE), and
-[third_party/](third_party/).
+Apache License 2.0. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [third_party/](third_party/) for preserved upstream licenses (CoplayDev and IvanMurzak both MIT).
