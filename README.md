@@ -27,58 +27,36 @@ contains:
 - a Unity Editor package (`com.reify.unity`)
 - a localhost HTTP bridge between the server and Unity
 - shared contracts used by the server transport
-- `80` MCP tools in the current local codebase
+- `167` MCP tools in the current local codebase
+- first-class MCP resources and prompts for discovery and guidance
 
-Current tool domains in the local worktree:
+Current local scope is broad editor-side coverage across roughly 26 domains,
+including scene/gameobject/component/asset/prefab work, scripts, packages,
+physics, animator, audio, navigation, UI, particles, profiler, tilemap,
+terrain, import settings, builds, scriptable objects, animation clips, input
+system, asmdefs, tests, project config writes, and meta/introspection layers.
 
-- Scene: 7
-- GameObject: 6
-- Component: 5
-- Asset: 10
-- Prefab: 7
-- Play mode: 6
-- Console log: 3
-- Editor ops: 6
-- Project info: 7
-- Packages: 3
-- Scripts: 3
-- Physics: 6
-- Animator: 4
-- Lighting diagnostic: 1
-- Material inspect: 1
-- Mesh bounds: 1
-- Render queue audit: 1
-- Domain reload status: 1
-- Persistence status: 1
-- Ping: 1
+Highlights that reflect the project's philosophy:
 
-Newest local additions:
+- evidence-first tools like `mesh-native-bounds`, `material-inspect`,
+  `scene-query`, `render-queue-audit`, `domain-reload-status`,
+  `persistence-status`, and `structured-screenshot`
+- identity hardening and ambiguity rejection for scene/object/component lookup
+- async test jobs with `tests-run`, `tests-status`, `tests-results`, and
+  `tests-cancel`
+- code-evidence project pipeline tools such as `asmdef-inspect`,
+  `asmdef-update-or-create`, `project-tag-add`, and `project-layer-set`
+- `batch-execute`, `reify-tool-list`, `reify-version`,
+  `reflection-method-find`, and opt-in `reflection-method-call`
+- MCP resources such as `reify://about`, `reify://philosophy/structured-state`,
+  and `reify://tools/catalog`
+- MCP prompts for structured diagnosis, safe change loops, and capability
+  escalation
 
-- Scripts: `script-read`, `script-update-or-create`, `script-delete`
-  with structured code evidence such as SHA-256, line count, namespace,
-  declared types, and file-name/type-name mismatch warnings
-- coverage batch:
-  `asset-copy`, `asset-refresh`, `asset-dependencies`,
-  `gameobject-duplicate`, `gameobject-set-parent`,
-  `package-search`, `package-add`, `package-remove`
-
-Philosophy and diagnostic highlights layered across those domains:
-
-- `mesh-native-bounds`
-- `material-inspect`
-- `scene-query`
-- `project-render-pipeline-state`
-- `render-queue-audit`
-- `lighting-diagnostic`
-- `asset-dependents`
-- `domain-reload-status`
-- `persistence-status`
-
-Latest local validation notes report live validation against Unity
-`6000.4.3f1`. The new Scripts domain plus the latest coverage batch were added
-after that validation and still need a live Unity pass. Development is
-currently local-first, so the local worktree is ahead of any pushed GitHub
-state.
+Latest local notes report 150 tools validated live against Unity `6000.4.3f1`,
+with the newer MCP resource/prompt layer plus the tests/asmdef/project-config
+batch scratch-built locally. Development is still local-first, so the local
+worktree may be ahead of pushed GitHub state.
 
 ## Architecture
 
@@ -88,6 +66,8 @@ state.
 - Server side: official `ModelContextProtocol` C# SDK
 - Mutation policy: Unity `Undo` integration plus read-back verification where
   practical
+- Robustness guards: bridge-side response-size cap and async polling for test
+  runs
 
 Primary code paths:
 
@@ -111,19 +91,20 @@ make Unity state legible to an API agent:
 - animator state as structured data instead of visual inference
 - render queue, scene query, persistence, and reload diagnostics as explicit
   JSON
+- project structure, tests, and project settings as editable API surfaces
 
 ## Repo layout
 
 ```text
 reify/
-├── client-config/         Claude Code MCP config examples
-├── docs/                  philosophy, architecture, roadmap, and status docs
-├── scripts/               upstream sync helpers
-├── src/
-│   ├── Editor/            Unity Editor package, HTTP bridge, and handlers
-│   ├── Server/            .NET 8 MCP stdio server
-│   └── Shared/            transport and argument contracts used by the server
-└── third_party/           preserved upstream license texts
+|-- client-config/         Claude Code MCP config examples
+|-- docs/                  philosophy, architecture, roadmap, and status docs
+|-- scripts/               upstream sync helpers
+|-- src/
+|   |-- Editor/            Unity Editor package, HTTP bridge, and handlers
+|   |-- Server/            .NET 8 MCP stdio server
+|   `-- Shared/            transport and argument contracts used by the server
+`-- third_party/           preserved upstream license texts
 ```
 
 ## Start here
@@ -132,6 +113,11 @@ reify/
   smoke-test flow
 - [VALIDATION_STEPS.md](VALIDATION_STEPS.md): explicit bootstrap validation
   checklist
+- [docs/NEXT_10_AND_TESTS.md](docs/NEXT_10_AND_TESTS.md): current ranked next
+  picks and top validation tests
+- [AGENTS.md](AGENTS.md): shortest universal instruction contract for LLMs
+- [docs/AGENT_PLAYBOOKS.md](docs/AGENT_PLAYBOOKS.md): client-tailored guidance
+  for Claude Code, Codex Desktop, Cursor, Windsurf, and VS Code MCP
 - [docs/ROADMAP.md](docs/ROADMAP.md): scope and next phases
 - [docs/SESSION_REPORT.md](docs/SESSION_REPORT.md): current repo-facing status
   snapshot

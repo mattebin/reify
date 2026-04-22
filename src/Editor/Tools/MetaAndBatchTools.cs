@@ -64,6 +64,8 @@ namespace Reify.Editor.Tools
                 }
             }
 
+            var frame = await MainThreadDispatcher.RunAsync(() => (long)Time.frameCount);
+
             return new
             {
                 requested      = calls.Count,
@@ -73,7 +75,7 @@ namespace Reify.Editor.Tools
                 stopped_early  = stopOnError && failureCount > 0 && results.Count < calls.Count,
                 results        = results.ToArray(),
                 read_at_utc    = DateTime.UtcNow.ToString("o"),
-                frame          = (long)Time.frameCount
+                frame
             };
         }
 
@@ -107,7 +109,7 @@ namespace Reify.Editor.Tools
                 })
                 .ToArray();
 
-            return Task.FromResult<object>(new
+            return MainThreadDispatcher.RunAsync<object>(() => new
             {
                 total_count = names.Length,
                 domain_count = domains.Length,
@@ -126,7 +128,7 @@ namespace Reify.Editor.Tools
             var asmName = asm.GetName();
             var asmVersion = asmName.Version?.ToString() ?? "0.0.0";
 
-            return Task.FromResult<object>(new
+            return MainThreadDispatcher.RunAsync<object>(() => new
             {
                 package_name       = "com.reify.unity",
                 assembly_name      = asmName.Name,
@@ -195,7 +197,7 @@ namespace Reify.Editor.Tools
                 });
             }
 
-            return Task.FromResult<object>(new
+            return MainThreadDispatcher.RunAsync<object>(() => new
             {
                 type_fqn      = type.FullName,
                 total_methods = all.Length,

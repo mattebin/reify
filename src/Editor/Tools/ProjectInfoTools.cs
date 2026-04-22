@@ -337,30 +337,36 @@ namespace Reify.Editor.Tools
                 var current = UnityEngine.QualitySettings.GetQualityLevel();
                 var levels  = new List<object>(names.Length);
 
-                for (var i = 0; i < names.Length; i++)
+                try
                 {
-                    // Some settings are current-level-scoped. SetQualityLevel
-                    // without applyExpensiveChanges is cheap.
-                    UnityEngine.QualitySettings.SetQualityLevel(i, applyExpensiveChanges: false);
-                    levels.Add(new
+                    for (var i = 0; i < names.Length; i++)
                     {
-                        index                  = i,
-                        name                   = names[i],
-                        shadow_distance        = UnityEngine.QualitySettings.shadowDistance,
-                        shadow_resolution      = UnityEngine.QualitySettings.shadowResolution.ToString(),
-                        shadow_cascades        = UnityEngine.QualitySettings.shadowCascades,
-                        vsync_count            = UnityEngine.QualitySettings.vSyncCount,
-                        anti_aliasing          = UnityEngine.QualitySettings.antiAliasing,
-                        pixel_light_count      = UnityEngine.QualitySettings.pixelLightCount,
-                        texture_quality        = UnityEngine.QualitySettings.globalTextureMipmapLimit,
-                        anisotropic_filtering  = UnityEngine.QualitySettings.anisotropicFiltering.ToString(),
-                        realtime_reflection_probes = UnityEngine.QualitySettings.realtimeReflectionProbes,
-                        soft_particles         = UnityEngine.QualitySettings.softParticles,
-                        lod_bias               = UnityEngine.QualitySettings.lodBias,
-                        maximum_lod_level      = UnityEngine.QualitySettings.maximumLODLevel
-                    });
+                        // Some settings are current-level-scoped. SetQualityLevel
+                        // without applyExpensiveChanges is cheap.
+                        UnityEngine.QualitySettings.SetQualityLevel(i, applyExpensiveChanges: false);
+                        levels.Add(new
+                        {
+                            index                  = i,
+                            name                   = names[i],
+                            shadow_distance        = UnityEngine.QualitySettings.shadowDistance,
+                            shadow_resolution      = UnityEngine.QualitySettings.shadowResolution.ToString(),
+                            shadow_cascades        = UnityEngine.QualitySettings.shadowCascades,
+                            vsync_count            = UnityEngine.QualitySettings.vSyncCount,
+                            anti_aliasing          = UnityEngine.QualitySettings.antiAliasing,
+                            pixel_light_count      = UnityEngine.QualitySettings.pixelLightCount,
+                            texture_quality        = UnityEngine.QualitySettings.globalTextureMipmapLimit,
+                            anisotropic_filtering  = UnityEngine.QualitySettings.anisotropicFiltering.ToString(),
+                            realtime_reflection_probes = UnityEngine.QualitySettings.realtimeReflectionProbes,
+                            soft_particles         = UnityEngine.QualitySettings.softParticles,
+                            lod_bias               = UnityEngine.QualitySettings.lodBias,
+                            maximum_lod_level      = UnityEngine.QualitySettings.maximumLODLevel
+                        });
+                    }
                 }
-                UnityEngine.QualitySettings.SetQualityLevel(current, applyExpensiveChanges: false);
+                finally
+                {
+                    UnityEngine.QualitySettings.SetQualityLevel(current, applyExpensiveChanges: false);
+                }
 
                 return new
                 {

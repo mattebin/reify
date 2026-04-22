@@ -35,6 +35,21 @@ namespace Reify.Editor.Bridge
             return tcs.Task;
         }
 
+        public static Task<T> RunAsync<T>(Func<Task<T>> work)
+        {
+            var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Queue.Enqueue(() => _ = ExecuteAsync(work, tcs));
+            return tcs.Task;
+        }
+
+        private static async Task ExecuteAsync<T>(
+            Func<Task<T>> work,
+            TaskCompletionSource<T> tcs)
+        {
+            try { tcs.SetResult(await work()); }
+            catch (Exception ex) { tcs.SetException(ex); }
+        }
+
         private static void Drain()
         {
             while (Queue.TryDequeue(out var action))

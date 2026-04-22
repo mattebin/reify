@@ -5,6 +5,7 @@ using ModelContextProtocol.Server;
 using Reify.Server;
 
 var builder = Host.CreateApplicationBuilder(args);
+var assembly = typeof(UnityClient).Assembly;
 
 builder.Logging.AddConsole(o =>
 {
@@ -17,6 +18,8 @@ builder.Services.AddSingleton<UnityClient>();
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly(assembly)
+    .WithResourcesFromAssembly(assembly)
+    .WithPromptsFromAssembly(assembly);
 
 await builder.Build().RunAsync();

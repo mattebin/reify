@@ -2,7 +2,7 @@
   "name": "com.reify.unity",
   "version": "0.2.0",
   "displayName": "Reify",
-  "description": "Structured state for Unity, for LLMs that reason. 150+ MCP tools with evidence-first design: structured JSON responses, ambiguity rejection, Undo-backed writes, philosophy warnings. Editor-side bridge for the Reify MCP server.",
+  "description": "Structured state for Unity, for LLMs that reason. 150+ MCP tools plus MCP resources/prompts, with evidence-first design: structured JSON responses, ambiguity rejection, Undo-backed writes, and philosophy warnings. Editor-side bridge for the Reify MCP server.",
   "unity": "2021.3",
   "documentationUrl": "https://github.com/mattebin/reify",
   "changelogUrl": "https://github.com/mattebin/reify/blob/main/CHANGELOG.md",
@@ -17,7 +17,10 @@
     "structured-state",
     "claude",
     "cursor",
-    "windsurf"
+    "windsurf",
+    "vscode",
+    "resources",
+    "prompts"
   ],
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1"

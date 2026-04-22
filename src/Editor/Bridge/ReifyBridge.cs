@@ -24,6 +24,7 @@ namespace Reify.Editor.Bridge
     internal static class ReifyBridge
     {
         private static readonly Dictionary<string, Func<JToken, Task<object>>> Handlers = new();
+        private const int DefaultMaxResponseBytes = 786432; // 768 KiB
 
         private static HttpListener _listener;
         private static CancellationTokenSource _cts;
@@ -170,7 +171,21 @@ namespace Reify.Editor.Bridge
                 }
 
                 var json = JsonConvert.SerializeObject(new { ok = true, data });
-                await WriteBody(ctx, 200, json);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                var maxResponseBytes = ResolveMaxResponseBytes();
+                if (bytes.Length > maxResponseBytes)
+                {
+                    await WriteError(
+                        ctx,
+                        413,
+                        "RESPONSE_TOO_LARGE",
+                        $"Tool '{tool}' produced {bytes.Length} UTF-8 bytes, exceeding the configured " +
+                        $"response cap of {maxResponseBytes} bytes. Narrow the query, paginate the " +
+                        "result, or raise REIFY_MAX_RESPONSE_BYTES if this size is intentional.");
+                    return;
+                }
+
+                await WriteBody(ctx, 200, bytes);
             }
             catch (Exception ex)
             {
@@ -182,17 +197,24 @@ namespace Reify.Editor.Bridge
         private static async Task WriteError(HttpListenerContext ctx, int status, string code, string message)
         {
             var json = JsonConvert.SerializeObject(new { ok = false, error = new { code, message } });
-            await WriteBody(ctx, status, json);
+            await WriteBody(ctx, status, Encoding.UTF8.GetBytes(json));
         }
 
-        private static async Task WriteBody(HttpListenerContext ctx, int status, string json)
+        private static async Task WriteBody(HttpListenerContext ctx, int status, byte[] bytes)
         {
-            var bytes = Encoding.UTF8.GetBytes(json);
             ctx.Response.StatusCode = status;
             ctx.Response.ContentType = "application/json";
             ctx.Response.ContentLength64 = bytes.Length;
             await ctx.Response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
             ctx.Response.OutputStream.Close();
+        }
+
+        private static int ResolveMaxResponseBytes()
+        {
+            var fromEnv = Environment.GetEnvironmentVariable("REIFY_MAX_RESPONSE_BYTES");
+            return int.TryParse(fromEnv, out var parsed) && parsed > 16384
+                ? parsed
+                : DefaultMaxResponseBytes;
         }
     }
 }

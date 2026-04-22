@@ -23,7 +23,7 @@ against Unity's API in its own structured-state-first philosophy.
 - [x] Editor operations (execute menu item, undo/redo, editor state) *(menu-execute/undo/redo/undo-history/selection-get/selection-set shipped 2026-04-21)*
 - [x] Project info (packages, render pipeline, build settings) *(project-info/packages/build-settings/layers-tags/render-pipeline-state shipped 2026-04-21)*
 - [x] Console log read/clear *(read/clear/subscribe-snapshot shipped 2026-04-21)*
-- [ ] Tags & Layers
+- [x] Tags & Layers *(read + write-side shipped 2026-04-22: project-layers-tags / project-tag-add / project-tag-remove / project-layer-set)*
 - [x] Selection *(editor-selection-get/set shipped 2026-04-21)*
 - [x] Prefab mode (open, close, overrides, apply/revert) *(create/instantiate/open/close/get-overrides/apply-overrides/revert-overrides shipped 2026-04-21)*
 
@@ -31,24 +31,24 @@ against Unity's API in its own structured-state-first philosophy.
 - [~] Animation (clips, controllers, parameters, play) — AND philosophy tool: animator-state introspection *(animator-state shipped 2026-04-21; direct clip/controller CRUD deferred)*
 - [x] Physics (raycasts, sphere/box casts, overlap, settings) *(raycast/raycast-all/spherecast/overlap-sphere/overlap-box/settings shipped 2026-04-21)*
 - [x] Lighting (lights, environment, skybox, lightmap baking, probes) — AND philosophy tool: urp-pipeline-state diagnostic *(project-render-pipeline-state shipped 2026-04-21; direct lighting CRUD deferred)*
-- [ ] Audio (AudioSources, AudioListeners, AudioMixers)
-- [ ] Terrain (create, modify, paint, layers, trees, details)
-- [ ] Navigation (NavMesh baking, agents, obstacles, off-mesh links)
-- [ ] Particles (creation, inspection, module editing)
-- [ ] UI (Canvas, UI elements, layout groups, event system)
-- [ ] Input Actions (Input System package)
-- [ ] Assembly Definitions (.asmdef files)
-- [ ] ScriptableObjects
-- [ ] Constraints (position, rotation, scale, aim, parent)
-- [ ] LOD Groups
-- [ ] Profiler (session control, stats, deep profiles)
+- [x] Audio (AudioSources, AudioListeners, AudioMixers) *(inspection + play/stop/mixer tooling shipped locally)*
+- [x] Terrain (create, modify, paint, layers, trees, details) *(read-heavy terrain batch shipped locally)*
+- [x] Navigation (NavMesh baking, agents, obstacles, off-mesh links) *(agent/sample/path tooling shipped locally)*
+- [x] Particles (creation, inspection, module editing) *(particle inspection/editor batch shipped locally)*
+- [x] UI (Canvas, UI elements, layout groups, event system) *(UI inspection/edit batch shipped locally)*
+- [x] Input Actions (Input System package) *(reflection-backed input system tools shipped locally)*
+- [x] Assembly Definitions (.asmdef files) *(asmdef-list / inspect / update-or-create / delete shipped 2026-04-22)*
+- [x] ScriptableObjects *(list-types / inspect shipped locally)*
+- [x] Constraints (position, rotation, scale, aim, parent) *(constraint domain shipped locally)*
+- [x] LOD Groups *(LOD domain shipped locally)*
+- [x] Profiler (session control, stats, deep profiles) *(profiler batch shipped locally)*
 - [ ] Frame Debugger
 - [ ] Memory Profiler
 - [ ] Shader Graph / Sub Graphs
 - [ ] VFX Graph
 - [ ] MPPM Multiplayer Playmode
 - [ ] Multi-Instance Unity Editor discovery
-- [ ] Builds (Windows, macOS, Linux, Android, iOS, WebGL)
+- [x] Builds (Windows, macOS, Linux, Android, iOS, WebGL) *(build target + execute tooling shipped locally)*
 
 ### reify-specific Philosophy Tools (Phase C — the differentiator)
 - [x] mesh-native-bounds — report mesh native dimensions BEFORE placement to eliminate scale-guessing *(shipped 2026-04-21, Phase B)*
@@ -61,7 +61,7 @@ against Unity's API in its own structured-state-first philosophy.
 - [x] asset-dependents — what references this asset, in what scenes, what components *(shipped 2026-04-21; component-level ref locations deferred)*
 - [x] domain-reload-status — is Unity mid-compile, is domain reload in progress, ready-to-operate flag *(shipped 2026-04-21, 9th philosophy tool)*
 - [x] persistence-status — dirty scenes + assets, any_dirty gate flag *(shipped 2026-04-21, 10th philosophy tool — all tractable gaps closed)*
-- [ ] structured-screenshot — only when LLM truly needs vision: returns screenshot + accompanying scene-state JSON for same frame
+- [x] structured-screenshot — only when LLM truly needs vision: returns screenshot + accompanying scene-state JSON for same frame *(shipped locally)*
 
 ---
 
@@ -136,7 +136,8 @@ ships with structured-state return shapes — no bundled multi-action tools.
    `menu-execute` (Coplay's `ExecuteMenuItem`), `batch-execute`
    (Coplay's `BatchExecute`).
 10. **Tests** — port Coplay's `RunTests.cs` + `GetTestJob.cs` (async job +
-    poll pattern worth keeping).
+    poll pattern worth keeping). *(tests-list / tests-run / tests-status /
+    tests-results / tests-cancel shipped 2026-04-22)*
 
 Exit condition: 25-30 core tools working. Any reasonable "set up a scene,
 add components, wire up scripts" workflow completable without
