@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace Reify.Shared.Contracts;
 
+public sealed record ScriptInspectArgs(
+    [property: JsonPropertyName("asset_path")] string AssetPath);
+
 public sealed record ScriptReadArgs(
     [property: JsonPropertyName("asset_path")] string AssetPath,
     [property: JsonPropertyName("include_content")] bool? IncludeContent);

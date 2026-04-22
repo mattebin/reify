@@ -8,6 +8,23 @@ namespace Reify.Server.Tools;
 [McpServerToolType]
 public static class ScriptServerTools
 {
+    [McpServerTool(Name = "script-inspect"), Description(
+        "Inspect a C# script under Assets/ with Roslyn-backed source analysis. " +
+        "Returns structured code evidence plus diagnostics with precise line/column " +
+        "ranges and AST-derived type/member summaries so an LLM can reason about " +
+        "the script from code facts rather than screenshots or Inspector guesses. " +
+        "On supported Unity installs this includes best-effort semantic diagnostics " +
+        "for the containing assembly; otherwise it falls back to syntax-only analysis.")]
+    public static async Task<JsonElement> ScriptInspect(
+        UnityClient unity,
+        [Description("Asset path under Assets/, e.g. 'Assets/Scripts/PlayerController.cs'.")]
+        string asset_path,
+        CancellationToken ct
+    ) => await unity.CallAsync<JsonElement>(
+        "script-inspect",
+        new ScriptInspectArgs(asset_path),
+        ct);
+
     [McpServerTool(Name = "script-read"), Description(
         "Read a C# script under Assets/. Returns structured code evidence " +
         "(guid, SHA-256, line count, namespace, using directives, declared " +

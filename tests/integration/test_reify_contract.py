@@ -51,6 +51,22 @@ def err(envelope: dict, code: str) -> dict:
     return envelope["error"]
 
 
+def request_compile_and_wait(timeout: float = 30.0) -> dict:
+    """Ask Unity to compile/reload scripts, then wait for the editor to settle."""
+    ok(call("editor-request-script-compilation"))
+
+    started = time.time()
+    while time.time() - started < timeout:
+        envelope = call("domain-reload-status", timeout=10.0)
+        if envelope.get("ok"):
+            data = envelope["data"]
+            if not data.get("is_busy", True):
+                return data
+        time.sleep(0.5)
+
+    raise AssertionError(f"Unity did not become ready within {timeout:.1f}s")
+
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -68,6 +84,41 @@ def test_read_has_evidence_fields():
     d = ok(call("scene-list"))
     assert "read_at_utc" in d
     assert "frame" in d
+
+
+def test_script_inspect_has_roslyn_evidence():
+    """script-inspect returns code-grounded diagnostics + type summaries."""
+    asset_path = f"Assets/ReifyContract/_inspect_{int(time.time() * 1000)}.cs"
+    content = (
+        "using UnityEngine;\n\n"
+        "public class ReifyContractInspect : MonoBehaviour\n"
+        "{\n"
+        "    public int value = 1;\n"
+        "\n"
+        "    void Start()\n"
+        "    {\n"
+        "        Debug.Log(value);\n"
+        "    }\n"
+        "}\n"
+    )
+
+    ok(call("script-update-or-create", {"asset_path": asset_path, "content": content}))
+    try:
+        request_compile_and_wait()
+        d = ok(call("script-inspect", {"asset_path": asset_path}))
+        assert d["roslyn_available"] is True
+        assert d["asset_path"] == asset_path
+        assert "guid" in d
+        assert d["inspection_mode"] in ("syntax_only", "syntax_and_semantic")
+        assert "compile_diagnostics" in d
+        assert "classes" in d
+        assert any(cls["name"] == "ReifyContractInspect" for cls in d["classes"])
+        assert "script" in d
+        assert "read_at_utc" in d
+        assert "frame" in d
+    finally:
+        ok(call("script-delete", {"asset_path": asset_path, "use_trash": False}))
+        request_compile_and_wait()
 
 
 def test_error_discrimination_unknown_tool():

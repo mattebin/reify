@@ -75,6 +75,14 @@ namespace Reify.Editor.Tools
             });
         }
 
+        [ReifyTool("script-inspect")]
+        public static Task<object> Inspect(JToken args)
+        {
+            var assetPath = args?.Value<string>("asset_path") ?? throw new ArgumentException("asset_path is required.");
+
+            return MainThreadDispatcher.RunAsync<object>(() => ScriptRoslyn.Inspect(assetPath));
+        }
+
         [ReifyTool("script-delete")]
         public static Task<object> Delete(JToken args)
         {
