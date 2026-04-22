@@ -7,6 +7,18 @@ namespace Reify.Server.Tools;
 [McpServerToolType]
 public static class MetaUtilityServerTools
 {
+    [McpServerTool(Name = "reify-orient"), Description(
+        "Compact orientation for an LLM that just discovered reify. " +
+        "Returns: thesis (one paragraph), the_loop (five numbered steps), " +
+        "before_you_build (run-this-first checklist), read_these (ordered " +
+        "doc pointers with 'why' for each), high_leverage_tools, and " +
+        "also_see (MCP resources + prompts). Call this before your first " +
+        "write if you have not read AGENTS.md + AGENT_TRAPS.md + the three " +
+        "ADRs. Reify is evidence + guides, not just tools; skipping the " +
+        "guides trips the documented traps within a dozen calls.")]
+    public static async Task<JsonElement> ReifyOrient(UnityClient unity, CancellationToken ct = default
+    ) => await unity.CallAsync<JsonElement>("reify-orient", null, ct);
+
     [McpServerTool(Name = "reify-log-issue"), Description(
         "Write a structured bug / unexpected-behavior report to " +
         "reports/llm-issues/pending/. The user gates GitHub submission " +

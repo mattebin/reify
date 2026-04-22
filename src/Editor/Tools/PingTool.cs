@@ -27,6 +27,10 @@ namespace Reify.Editor.Tools
                     platform      = EditorUserBuildSettings.activeBuildTarget.ToString(),
                     is_play_mode  = EditorApplication.isPlayingOrWillChangePlaymode,
                     is_compiling  = EditorApplication.isCompiling,
+                    // Subtle but present: every first-contact sees the pointer.
+                    // LLMs that skip straight to building can't claim nobody told them.
+                    orient_hint   = "First time here? Call `reify-orient` before building anything. " +
+                                    "reify is an evidence + guides discipline; the tools alone are not enough.",
                     frame         = (long)Time.frameCount,
                     read_at_utc   = DateTime.UtcNow.ToString("o")
                 };

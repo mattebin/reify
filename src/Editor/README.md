@@ -2,10 +2,11 @@
 
 > Structured state for Unity, for LLMs that reason.
 
-Editor-side HTTP bridge for the Reify MCP server. 150+ tools that expose
+Editor-side HTTP bridge for the Reify MCP server. 230+ tools that expose
 Unity Editor state and operations as machine-readable JSON with
-philosophy-layer warnings, Undo-backed writes, and ambiguity rejection
-on path lookups.
+philosophy-layer warnings, Undo-backed writes, spatial anchor proofs,
+and ambiguity rejection on path lookups. Call `reify-tool-list` for the
+live inventory.
 
 ## Install
 

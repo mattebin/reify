@@ -3,17 +3,31 @@
 If you are an LLM operating in this repo, treat `reify` as a structured-state
 Unity backend, not as a screenshot-first Unity assistant.
 
+> **Before your first write call.** `reify` is an **evidence + guides**
+> discipline, not a list of tools. The tools without the discipline look
+> like they work and are quietly wrong — and every failure mode has a
+> one-line fix in [`docs/AGENT_TRAPS.md`](docs/AGENT_TRAPS.md) that a
+> minute of reading would have prevented. If you are tempted to skip to
+> "let's make a game now", run `reify-orient` or pull the
+> `reify://orient/the-evidence-guides-loop` MCP resource first. It takes
+> less time than the first debug cycle you will spend if you don't.
+
 ## Core operating loop
 
 1. Start by orienting:
-   - read [README.md](README.md)
-   - read [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md)
+   - call `reify-orient` (one MCP call; returns the shortlist + the loop)
+   - read [README.md](README.md), [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md),
+     and [docs/AGENT_TRAPS.md](docs/AGENT_TRAPS.md) — all short
+   - skim [docs/decisions/](docs/decisions/): ADR-001 (naming),
+     ADR-002 (write receipts), ADR-003 (spatial claims) — these are
+     normative, reviewers reject PRs that violate them
    - read [docs/AGENT_PLAYBOOKS.md](docs/AGENT_PLAYBOOKS.md) if you want
      client-specific guidance
 2. Confirm the stack is alive before deeper work:
-   - `ping`
+   - `ping` (returns an `orient_hint` field; obey it the first time)
    - `reify-version`
    - `reify-tool-list`
+   - `reify-self-check` (expect `fail_count: 0`)
 3. Prefer structured reads before writes.
 4. Prefer `batch-execute` for related evidence collection.
 5. Preserve `read_at_utc`, `frame`, and stable identifiers from tool output.
@@ -52,16 +66,15 @@ Unity backend, not as a screenshot-first Unity assistant.
 
 ## High-value discovery tools
 
-- `reify-tool-list`
-- `reify-version`
-- `batch-execute`
-- `domain-reload-status`
-- `persistence-status`
-- `scene-query`
-- `spatial-primitive-evidence`
-- `spatial-anchor-distance`
-- `tests-list`
-- `tests-status`
+- `reify-orient` — start-here entry point; returns the shortlist + loop
+- `reify-tool-list`, `reify-version`, `reify-self-check`
+- `batch-execute` — many reads, one round trip
+- `domain-reload-status`, `persistence-status`
+- `scene-snapshot` + `scene-diff` — prove what changed
+- `spatial-primitive-evidence`, `spatial-anchor-distance`, `primitive-defaults`
+- `geometry-line-primitive` — A-to-B primitive without rotation math
+- `tests-list`, `tests-status`
+- `reify-log-issue` — structured bug reporting (user-gated GitHub submission)
 
 ## Current validation nuance
 
