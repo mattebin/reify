@@ -88,8 +88,9 @@ VS Code MCP clients should be conservative and evidence-heavy.
 - Begin with `ping` and `reify-version` on session start.
 - Prefer resources/prompts for orientation when the user is vague.
 - Use `tests-list` before `tests-run`.
-- Expect some newer wrappers to require the argument shape advertised by the
-  MCP schema; do not guess flattened arguments if the tool says otherwise.
+- Prefer the schema actually advertised by MCP over memory. Recent/high-value
+  wrappers were flattened, but some older legacy wrappers may still have
+  awkward shapes until the rest of the server surface is normalized.
 - Keep user-visible summaries grounded in actual tool output, especially for
   project settings, package state, and scene mutations.
 
@@ -105,4 +106,3 @@ If a new MCP-capable client is added later, it should inherit this order:
 6. one write at a time
 7. read-back verification
 8. screenshot or reflection only if the structured path fails
-

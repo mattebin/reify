@@ -7,8 +7,10 @@ raise the trust/usability floor of what already exists.
 ## Top 10 next picks
 
 1. Flatten newer MCP wrapper argument shapes.
-   Several newer tools still expose nested `args` wrappers on the MCP side.
-   They work, but they create avoidable client friction.
+   Recent/high-value wrappers have now been flattened for `meta`,
+   `project pipeline`, `final batch`, and `import settings`. The remaining
+   work is to finish flattening older legacy `JsonElement args` wrappers in
+   the rest of the server surface.
 2. Finish live validation of the newest write/async batch.
    `tests-run/status/results/cancel`, `asmdef-update-or-create/delete`, and
    `project-layer-set` should all have clean live round-trips recorded.
@@ -83,4 +85,3 @@ to improve one of three things:
 
 That ordering keeps `reify` on its actual differentiator: Unity by API, with
 structured evidence strong enough for an LLM to trust.
-
