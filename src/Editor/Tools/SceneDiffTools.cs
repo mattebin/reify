@@ -222,7 +222,11 @@ namespace Reify.Editor.Tools
 
         private static object DiffOne(JObject before, object currentAny)
         {
-            var current = JObject.FromObject(currentAny);
+            // Round-trip through a string so `current` and `before` are both
+            // produced by the JSON parser — that way numeric type tags
+            // (Float vs Integer, double vs float) normalize identically and
+            // DeepEquals won't report phantom diffs from FromObject quirks.
+            var current = JObject.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(currentAny));
 
             var diffs = new List<object>();
 

@@ -149,7 +149,18 @@ namespace Reify.Editor.Bridge
                 using (var reader = new StreamReader(ctx.Request.InputStream, Encoding.UTF8))
                     body = await reader.ReadToEndAsync();
 
-                var envelope = JObject.Parse(body);
+                // DateParseHandling.None is critical: without it, Newtonsoft
+                // auto-coerces any ISO-8601 string (e.g. last_write_utc)
+                // into a DateTime, and subsequent .Value<string>() reformats
+                // it with the culture default — silently corrupting every
+                // roundtrip where a tool receives a prior tool's output.
+                // See the asset-diff phantom-modification bug found in
+                // live validation.
+                using var reader2 = new Newtonsoft.Json.JsonTextReader(new StringReader(body))
+                {
+                    DateParseHandling = Newtonsoft.Json.DateParseHandling.None
+                };
+                var envelope = JObject.Load(reader2);
                 var tool = envelope.Value<string>("tool");
                 var args = envelope["args"];
 
