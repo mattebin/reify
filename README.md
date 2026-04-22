@@ -1,16 +1,55 @@
 # reify
 
-A Unity MCP server that exposes the Unity Editor as **code-shaped evidence** — 230+ tools returning structured JSON so an LLM can diff, grep, and verify instead of squinting at screenshots. Editor-only, opinionated, validated live against **Unity 6000.4.3f1**.
+**Unity Editor MCP server for LLMs that need checkable evidence instead of screenshots.** 230+ tools returning structured JSON — so an agent can diff, grep, and verify what it just did, and a human reviewer can reject writes that don't prove themselves.
 
-> 🛑 **READ THIS FIRST — reify is an evidence + guides discipline, not a toolbox.**
->
-> The tools look like they work even when they don't. An LLM that skips the docs will trip the known failure modes in [`docs/AGENT_TRAPS.md`](docs/AGENT_TRAPS.md) within a dozen calls. If your agent just connected to reify, call `reify-orient` (one MCP call, ~1 second, returns the whole reading list) before the first write.
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Unity](https://img.shields.io/badge/Unity-6000.4%2B-black?logo=unity)](https://unity.com/releases/editor/archive)
+[![MCP](https://badge.mcpx.dev?status=on 'MCP Enabled')](https://modelcontextprotocol.io/introduction)
+[![CI](https://github.com/mattebin/reify/actions/workflows/ci.yml/badge.svg)](https://github.com/mattebin/reify/actions/workflows/ci.yml)
+[![Contract tests](https://img.shields.io/badge/contract%20tests-19%2F19-brightgreen)](tests/integration/test_reify_contract.py)
+[![MCP clients](https://img.shields.io/badge/clients-Claude%20Code%20%7C%20Cursor%20%7C%20VS%20Code%20%7C%20Windsurf-6f42c1)](client-config/)
+
+Works with Claude Code / Claude Desktop, Cursor, VS Code MCP, and Windsurf. Live-validated against **Unity 6000.4.3f1**. Apache 2.0.
+
+## What an LLM actually does with reify
+
+Here's the stickman-build receipt from a real session, trimmed. The agent reads live dimensions, places geometry, and the evidence layer proves every joint:
+
+```json
+// agent calls: primitive-defaults  → Capsule is 2m tall, radius 0.5m
+{"kind": "Capsule", "height": 2.0, "radius": 0.5, "axis": "Y"}
+
+// agent calls: gameobject-create  primitive=Capsule scale=(0.2, 0.5, 0.2)
+// reify's response (trimmed) — receipt is self-proving:
+{
+  "gameobject": { "name": "LeftLeg", "instance_id": -43654, ... },
+  "primitive_defaults": { "height": 2.0, "radius": 0.5, ... },
+  "mesh_bounds":        { "world_size": { "x": 0.20, "y": 1.00, "z": 0.20 } },
+  "world_height": 1.000,     // proven, not guessed
+  "applied_fields":     [ { "field": "primitive_created", "before": null, "after": {...} } ]
+}
+
+// agent calls: spatial-anchor-distance  LeftLeg.top ↔ Torso.bottom
+{
+  "distance_meters": 0.0,         // proves they touch
+  "axis_gap_meters": { "x": 0, "y": 0, "z": 0 },
+  "within_tolerance": true
+}
+
+// agent calls: scene-diff (against pre-build snapshot)
+{ "added_count": 7, "removed_count": 0, "changed_count": 0 }
+```
+
+A reviewer reading the transcript doesn't have to trust the agent's word on *anything*. The receipts are the proof.
+
+> 🛑 **One thing to know up front — reify is a *discipline*, not just tools.**
+> Evidence + guides. Tools without the discipline look like they work and are quietly wrong. Have your agent call `reify-orient` before its first write — one MCP call, returns the full reading list. Or read [AGENTS.md](AGENTS.md) + [docs/AGENT_TRAPS.md](docs/AGENT_TRAPS.md) yourself, both short.
 
 > ⚠️ **Honest disclaimer.**
 > - **Editor-only.** reify runs inside the Unity Editor. It does not ship to built players. No runtime gameplay hooks.
 > - **One Unity version battle-tested.** Live-validated on Unity `6000.4.3f1`. Other versions probably work (reflection is version-tolerant for known drift points) but the contract suite only runs against 6.
 > - **Opinionated writes.** Write tools reject silent no-ops (per [ADR-002](docs/decisions/ADR-002-write-receipts.md)) and spatial claims require anchor proofs (per [ADR-003](docs/decisions/ADR-003-spatial-claims.md)). If your agent is used to rubber-stamping "done!", reify will catch it.
-> - **If you want a plug-and-play productivity toolkit, try [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) or [IvanMurzak/Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) first.** reify prioritises *verifiability over breadth*. It overlaps those two on most domains, is ahead on evidence/trust, behind on installer polish.
+> - **If you want plug-and-play with broader installer polish, try [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) or [IvanMurzak/Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) first.** reify prioritises *verifiability over breadth*. It overlaps them on most domains, is ahead on evidence/trust, behind on installer UX.
 
 ## How it works
 
