@@ -164,7 +164,7 @@ namespace Reify.Editor.Tools
                     queries_start_in_colliders    = Physics2D.queriesStartInColliders,
                     queries_hit_triggers          = Physics2D.queriesHitTriggers,
                     callbacks_on_disable          = Physics2D.callbacksOnDisable,
-                    auto_sync_transforms          = Physics2D.autoSyncTransforms,
+                    // Physics2D.autoSyncTransforms is obsolete in newer Unity; omitted.
                     simulation_mode               = Physics2D.simulationMode.ToString(),
                     job_options = new
                     {

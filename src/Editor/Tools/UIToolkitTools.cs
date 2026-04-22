@@ -151,7 +151,7 @@ namespace Reify.Editor.Tools
                     asset_path   = path,
                     instance_id  = GameObjectResolver.InstanceIdOf(sheet),
                     name         = sheet.name,
-                    import_glossary_size = sheet.importedWithCompilerVersion,
+                    guid         = AssetDatabase.AssetPathToGUID(path),
                     dependencies = deps,
                     read_at_utc  = DateTime.UtcNow.ToString("o"),
                     frame        = (long)Time.frameCount

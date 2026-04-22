@@ -5,13 +5,15 @@ using Newtonsoft.Json.Linq;
 using Reify.Editor.Bridge;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Reify.Editor.Tools
 {
     /// <summary>
     /// Shader read-only surface. Covers built-in Unity shaders (always
-    /// available) via ShaderUtil, plus Shader Graph assets (.shadergraph)
-    /// via AssetImporter reflection when com.unity.shadergraph is installed.
+    /// available) via the Shader.GetProperty* API, plus Shader Graph assets
+    /// (.shadergraph) via AssetImporter reflection when com.unity.shadergraph
+    /// is installed.
     ///
     /// The existing material-inspect tool covers per-material property
     /// values; this tool covers the shader itself — property declarations,
@@ -53,21 +55,25 @@ namespace Reify.Editor.Tools
                 var warnings = new List<string>();
                 if (!shader.isSupported) warnings.Add("shader.isSupported == false on this platform.");
 
-                // Property enumeration via ShaderUtil (editor-only).
-                var propCount = ShaderUtil.GetPropertyCount(shader);
+                // Property enumeration via the modern Shader API (the
+                // equivalent ShaderUtil.Get* methods are marked obsolete).
+                var propCount = shader.GetPropertyCount();
                 var props = new List<object>(propCount);
                 for (var i = 0; i < propCount; i++)
                 {
+                    var ptype = shader.GetPropertyType(i);
+                    var flags = shader.GetPropertyFlags(i);
                     props.Add(new
                     {
                         index        = i,
-                        name         = ShaderUtil.GetPropertyName(shader, i),
-                        description  = ShaderUtil.GetPropertyDescription(shader, i),
-                        type         = ShaderUtil.GetPropertyType(shader, i).ToString(),
-                        is_hidden    = ShaderUtil.IsShaderPropertyHidden(shader, i),
-                        texture_dim  = ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv
-                            ? ShaderUtil.GetTexDim(shader, i).ToString() : null,
-                        range_limits = ReadRangeLimits(shader, i)
+                        name         = shader.GetPropertyName(i),
+                        description  = shader.GetPropertyDescription(i),
+                        type         = ptype.ToString(),
+                        flags        = flags.ToString(),
+                        is_hidden    = (flags & ShaderPropertyFlags.HideInInspector) != 0,
+                        texture_dim  = ptype == ShaderPropertyType.Texture
+                            ? shader.GetPropertyTextureDimension(i).ToString() : null,
+                        range_limits = ReadRangeLimits(shader, i, ptype)
                     });
                 }
 
@@ -113,17 +119,17 @@ namespace Reify.Editor.Tools
             });
         }
 
-        private static object ReadRangeLimits(Shader shader, int i)
+        private static object ReadRangeLimits(Shader shader, int i, ShaderPropertyType ptype)
         {
-            if (ShaderUtil.GetPropertyType(shader, i) != ShaderUtil.ShaderPropertyType.Range)
-                return null;
+            if (ptype != ShaderPropertyType.Range) return null;
             try
             {
+                var limits = shader.GetPropertyRangeLimits(i);
                 return new
                 {
-                    def = ShaderUtil.GetRangeLimits(shader, i, 0),
-                    min = ShaderUtil.GetRangeLimits(shader, i, 1),
-                    max = ShaderUtil.GetRangeLimits(shader, i, 2)
+                    def = shader.GetPropertyDefaultFloatValue(i),
+                    min = limits.x,
+                    max = limits.y
                 };
             }
             catch { return null; }
@@ -175,7 +181,7 @@ namespace Reify.Editor.Tools
                         is_supported   = shader.isSupported,
                         render_queue   = shader.renderQueue,
                         pass_count     = shader.passCount,
-                        property_count = ShaderUtil.GetPropertyCount(shader)
+                        property_count = shader.GetPropertyCount()
                     };
                 }
 

@@ -46,9 +46,9 @@ namespace Reify.Editor.Tools
                 var dir = Path.GetDirectoryName(outputPath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-                CaptureFlags flags = CaptureFlags.ManagedObjects | CaptureFlags.NativeObjects
-                    | CaptureFlags.NativeAllocations | CaptureFlags.NativeAllocationSites
-                    | CaptureFlags.NativeStackTraces;
+                Unity.Profiling.Memory.CaptureFlags flags = Unity.Profiling.Memory.CaptureFlags.ManagedObjects | Unity.Profiling.Memory.CaptureFlags.NativeObjects
+                    | Unity.Profiling.Memory.CaptureFlags.NativeAllocations | Unity.Profiling.Memory.CaptureFlags.NativeAllocationSites
+                    | Unity.Profiling.Memory.CaptureFlags.NativeStackTraces;
                 if (!string.IsNullOrEmpty(captureFlagsStr))
                 {
                     if (!Enum.TryParse(captureFlagsStr, true, out flags))
@@ -61,7 +61,7 @@ namespace Reify.Editor.Tools
                 var tcs = new System.Threading.Tasks.TaskCompletionSource<(string path, bool ok)>(
                     System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
-                MemoryProfiler.TakeSnapshot(outputPath, (path, ok) => tcs.TrySetResult((path, ok)), flags);
+                Unity.Profiling.Memory.MemoryProfiler.TakeSnapshot(outputPath, (path, ok) => tcs.TrySetResult((path, ok)), flags);
 
                 // Callbacks fire on main thread during the next editor update;
                 // awaiting here yields control so the dispatcher can keep
