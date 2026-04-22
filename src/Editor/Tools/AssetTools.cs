@@ -148,6 +148,10 @@ namespace Reify.Editor.Tools
                         "Reverse-dependency scan (who references THIS) not performed — " +
                         "deleting may orphan references in scenes/prefabs.");
 
+                // Capture pre-delete provenance so the receipt includes the
+                // full {path, guid, type_fqn, instance_id} we just removed.
+                var deletedSummary = AssetProvenance.Summarize(path);
+
                 var ok = useTrash
                     ? AssetDatabase.MoveAssetToTrash(path)
                     : AssetDatabase.DeleteAsset(path);
@@ -161,6 +165,8 @@ namespace Reify.Editor.Tools
                 return new
                 {
                     deleted = new { path, guid, use_trash = useTrash },
+                    deleted_provenance = deletedSummary,
+                    guids_touched = new[] { deletedSummary },
                     dependencies = dependencies,
                     warnings,
                     read_at_utc = DateTime.UtcNow.ToString("o"),
@@ -302,10 +308,15 @@ namespace Reify.Editor.Tools
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
 
+                var sourceProv = AssetProvenance.Summarize(from);
+                var destProv   = AssetProvenance.Summarize(to);
                 return new
                 {
                     copied      = new { from, to },
                     asset       = AssetSummary(to),
+                    source_provenance = sourceProv,
+                    destination_provenance = destProv,
+                    guids_touched = new[] { sourceProv, destProv },
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };
