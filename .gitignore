@@ -48,6 +48,15 @@ venv/
 # Local scratch
 .scratch/
 TODO.local.md
+scratch-build/
+
+# LLM-reported issues — commit README + TEMPLATE, keep user-specific
+# pending/submitted/dismissed reports local. Once filed to GitHub, the
+# GitHub issue is the canonical record; the local file is a transient
+# working copy, not part of the project history.
+reports/llm-issues/pending/
+reports/llm-issues/submitted/
+reports/llm-issues/dismissed/
 
 # Upstream sync state
 .upstream-sync-state

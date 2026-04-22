@@ -24,6 +24,21 @@ Unity backend, not as a screenshot-first Unity assistant.
    question.
 9. Use `reflection-method-call` only as an explicit opt-in escape hatch.
 10. After mutations, verify by reading back through the same Unity code path.
+11. For spatial/layout claims, use geometry evidence before concluding
+    something "looks right":
+   - `primitive-defaults`
+   - `spatial-primitive-evidence`
+   - `spatial-anchor-distance`
+   - See [ADR-003](docs/decisions/ADR-003-spatial-claims.md) — spatial
+     claims are normatively required to carry anchor-based proof.
+   - See [docs/AGENT_TRAPS.md](docs/AGENT_TRAPS.md) for the observed
+     failure modes (anchor convention, rotation asymmetry, etc.) and
+     one-line heuristics for each.
+12. If a tool behaves unexpectedly or you suspect a reify bug, use
+    `reify-log-issue` to write a structured report under
+    `reports/llm-issues/`. The user reviews pending reports and chooses
+    which to file as GitHub issues via `python scripts/review-llm-issues.py`.
+    Do not open GitHub issues directly.
 
 ## Evidence rules
 
@@ -32,6 +47,8 @@ Unity backend, not as a screenshot-first Unity assistant.
 - Treat dirty scenes, compile state, and domain reload state as first-class
   guards, not incidental noise.
 - If a write tool succeeds but post-state is not yet trustworthy, say so.
+- If you claim two shapes connect, align, overlap, or reach a target height,
+  prove it from anchors/bounds rather than from rough placement intuition.
 
 ## High-value discovery tools
 
@@ -41,6 +58,8 @@ Unity backend, not as a screenshot-first Unity assistant.
 - `domain-reload-status`
 - `persistence-status`
 - `scene-query`
+- `spatial-primitive-evidence`
+- `spatial-anchor-distance`
 - `tests-list`
 - `tests-status`
 
@@ -49,4 +68,3 @@ Unity backend, not as a screenshot-first Unity assistant.
 This repo is often edited live through a local Unity file package reference.
 If a just-edited tool still behaves like old code, refresh/re-focus Unity
 before concluding the patch failed.
-
