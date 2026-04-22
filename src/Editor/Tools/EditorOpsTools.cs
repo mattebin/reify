@@ -13,25 +13,25 @@ namespace Reify.Editor.Tools
     {
         // ---------- editor-request-script-compilation ----------
         // When Unity is in the background, saved-file changes don't trigger
-        // a script recompile until the editor regains focus. That blocks
-        // any reify-driven fix cycle. This tool calls the official
-        // CompilationPipeline.RequestScriptCompilation so callers can
-        // remotely re-compile and re-load the new assembly.
+        // a script recompile until the editor regains focus. This tool
+        // forces BOTH the compile AND the domain reload remotely so the
+        // fix-and-verify cycle doesn't need alt-tab. On newer Unity the
+        // domain reload after background compile is deferred until focus
+        // unless EditorUtility.RequestScriptReload() is called too.
         [ReifyTool("editor-request-script-compilation")]
         public static Task<object> RequestScriptCompilation(JToken _)
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                // RequestScriptCompilation (RequestScriptCompilationOptions)
-                // exists on 2021.2+ and is the supported API. It's async —
-                // callers should poll domain-reload-status to know when the
-                // new assembly is live.
                 CompilationPipeline.RequestScriptCompilation();
+                // RequestScriptReload forces the domain to cycle once compile
+                // finishes, even when the editor is unfocused.
+                EditorUtility.RequestScriptReload();
                 return new
                 {
                     requested      = true,
-                    note           = "Script compilation requested. Poll domain-reload-status " +
-                                     "until last_compile_finished_utc advances past read_at_utc.",
+                    note           = "Compile + reload requested. Poll domain-reload-status " +
+                                     "until last_domain_reload_utc advances past read_at_utc.",
                     read_at_utc    = DateTime.UtcNow.ToString("o"),
                     frame          = (long)Time.frameCount
                 };
