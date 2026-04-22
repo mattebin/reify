@@ -18,6 +18,33 @@ All notable changes to reify are documented here. Ordering follows
 - `tmp-text-inspect` / `tmp-text-set` / `tmp-font-asset-inspect` —
   TextMesh Pro surface via reflection, package-gated on
   `com.unity.textmeshpro`.
+- `shader-inspect` — Shader declaration side: ShaderUtil property dump,
+  keyword enumeration, is_supported, pass/subshader counts.
+- `shader-graph-inspect` — `.shadergraph` / `.shadersubgraph` importer
+  inspection, package-gated on `com.unity.shadergraph`.
+- `visual-effect-inspect` / `visual-effect-asset-inspect` — VFX Graph
+  reflection, package-gated on `com.unity.visualeffectgraph`.
+- `scene-snapshot` / `scene-diff` — first-class structural scene diff.
+  Prove exactly which GameObjects, components, and transform fields a
+  write touched, without a screenshot.
+- `asset-snapshot` / `asset-diff` — first-class asset-database diff.
+  Added/removed/moved (by GUID stability) / modified (by length +
+  last-write-utc delta) receipts for imports / moves / refactors.
+- `memory-snapshot-capture` — built-in Unity memory snapshot (.snap
+  producer) via `UnityEngine.Profiling.Memory.Experimental.MemoryProfiler
+  .TakeSnapshot`. Produces the artifact without requiring
+  `com.unity.memoryprofiler` (which is only needed to open the file).
+
+### Changed
+- GUID provenance retrofitted onto `asset-delete`, `asset-copy`, and
+  `prefab-create` — write-side receipts now include `guids_touched[]`
+  and before/after `*_provenance` blocks.
+- Flattened the eight remaining legacy `JsonElement args` server
+  wrappers (build-target-switch, build-execute, structured-screenshot,
+  terrain-*, constraint-*, lod-group-*, tilemap-*, particle-*, camera-*,
+  light-*, animator-parameter-set / crossfade / play, physics-*). MCP
+  clients now see named, typed parameters with schema, not an opaque
+  `args` blob.
 
 ### Packaging
 - `CHANGELOG.md` added (referenced by `package.json` but missing in earlier
