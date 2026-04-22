@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -88,6 +89,9 @@ namespace Reify.Editor.Tools
         public static string SceneReferenceOf(Scene scene)
         {
             if (!scene.IsValid()) return null;
+            var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (prefabStage != null && prefabStage.scene == scene)
+                return prefabStage.assetPath;
             return !string.IsNullOrEmpty(scene.path) ? scene.path : scene.name;
         }
 
@@ -100,9 +104,8 @@ namespace Reify.Editor.Tools
             var matches = new List<GameObject>();
             if (bareNameLookup)
             {
-                for (var s = 0; s < SceneManager.sceneCount; s++)
+                foreach (var scene in EnumerateSearchScenes())
                 {
-                    var scene = SceneManager.GetSceneAt(s);
                     if (!SceneMatches(scene, sceneSelector)) continue;
                     foreach (var root in scene.GetRootGameObjects())
                         WalkByName(root.transform, hierarchyPath, matches);
@@ -111,13 +114,35 @@ namespace Reify.Editor.Tools
             }
 
             var segments = hierarchyPath.Split('/');
-            for (var s = 0; s < SceneManager.sceneCount; s++)
+            foreach (var scene in EnumerateSearchScenes())
             {
-                var scene = SceneManager.GetSceneAt(s);
                 if (!SceneMatches(scene, sceneSelector)) continue;
                 CollectHierarchyMatches(scene, segments, matches);
             }
             return matches;
+        }
+
+        private static IEnumerable<Scene> EnumerateSearchScenes()
+        {
+            for (var s = 0; s < SceneManager.sceneCount; s++)
+                yield return SceneManager.GetSceneAt(s);
+
+            var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (prefabStage != null && prefabStage.scene.IsValid())
+            {
+                var alreadyYielded = false;
+                for (var s = 0; s < SceneManager.sceneCount; s++)
+                {
+                    if (SceneManager.GetSceneAt(s) == prefabStage.scene)
+                    {
+                        alreadyYielded = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyYielded)
+                    yield return prefabStage.scene;
+            }
         }
 
         private static void ParseLookup(string path, out string sceneSelector, out string hierarchyPath, out bool bareNameLookup)
@@ -143,8 +168,14 @@ namespace Reify.Editor.Tools
             if (!scene.isLoaded) return false;
             if (string.IsNullOrEmpty(sceneSelector)) return true;
 
-            return string.Equals(scene.path, sceneSelector, StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(scene.name, sceneSelector, StringComparison.OrdinalIgnoreCase);
+            if (string.Equals(scene.path, sceneSelector, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(scene.name, sceneSelector, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            return prefabStage != null &&
+                   prefabStage.scene == scene &&
+                   string.Equals(prefabStage.assetPath, sceneSelector, StringComparison.OrdinalIgnoreCase);
         }
 
         private static void CollectHierarchyMatches(Scene scene, string[] segments, List<GameObject> matches)

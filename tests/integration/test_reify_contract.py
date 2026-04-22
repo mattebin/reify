@@ -31,11 +31,29 @@ def call(tool: str, args: dict | None = None, timeout: float = 15.0) -> dict:
     req = urllib.request.Request(
         BASE, data=body, headers={"Content-Type": "application/json"}
     )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return json.loads(r.read())
-    except urllib.error.HTTPError as e:
-        return json.loads(e.read())
+    last_exc: Exception | None = None
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                payload = r.read()
+                if not payload.strip():
+                    raise json.JSONDecodeError("empty response", "", 0)
+                return json.loads(payload)
+        except urllib.error.HTTPError as e:
+            payload = e.read()
+            if not payload.strip():
+                last_exc = json.JSONDecodeError("empty error response", "", 0)
+            else:
+                return json.loads(payload)
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+            last_exc = e
+
+        if attempt < 4:
+            time.sleep(0.2)
+            continue
+
+    assert last_exc is not None
+    raise last_exc
 
 
 def ok(envelope: dict) -> dict:
@@ -88,10 +106,12 @@ def test_read_has_evidence_fields():
 
 def test_script_inspect_has_roslyn_evidence():
     """script-inspect returns code-grounded diagnostics + type summaries."""
-    asset_path = f"Assets/ReifyContract/_inspect_{int(time.time() * 1000)}.cs"
+    suffix = int(time.time() * 1000)
+    class_name = f"ReifyContractInspect_{suffix}"
+    asset_path = f"Assets/ReifyContract/_inspect_{suffix}.cs"
     content = (
         "using UnityEngine;\n\n"
-        "public class ReifyContractInspect : MonoBehaviour\n"
+        f"public class {class_name} : MonoBehaviour\n"
         "{\n"
         "    public int value = 1;\n"
         "\n"
@@ -112,13 +132,137 @@ def test_script_inspect_has_roslyn_evidence():
         assert d["inspection_mode"] in ("syntax_only", "syntax_and_semantic")
         assert "compile_diagnostics" in d
         assert "classes" in d
-        assert any(cls["name"] == "ReifyContractInspect" for cls in d["classes"])
+        assert any(cls["name"] == class_name for cls in d["classes"])
         assert "script" in d
         assert "read_at_utc" in d
         assert "frame" in d
     finally:
         ok(call("script-delete", {"asset_path": asset_path, "use_trash": False}))
         request_compile_and_wait()
+
+
+def test_script_execute_smoke():
+    """script-execute compiles and runs a parameterless static entrypoint."""
+    d = ok(call("script-execute", {
+        "code": (
+            "using UnityEngine;\n"
+            "public static class ReifyScriptExecution\n"
+            "{\n"
+            "    public static object Run()\n"
+            "    {\n"
+            "        return Application.productName + \":\" + 7;\n"
+            "    }\n"
+            "}\n"
+        )
+    }))
+    assert d["executed"] is True
+    assert d["compile_succeeded"] is True
+    assert d["return_value"].endswith(":7")
+
+
+def test_object_get_modify_roundtrip():
+    """Generic object-get/object-modify works on arbitrary UnityEngine.Objects."""
+    name = f"_obj_{int(time.time() * 1000)}"
+    created = ok(call("gameobject-create", {"name": name}))
+    try:
+        added = ok(call("component-add", {
+            "gameobject_path": name,
+            "component_type": "UnityEngine.Rigidbody"
+        }))
+        instance_id = added["added"]["instance_id"]
+
+        got = ok(call("object-get-data", {
+            "instance_id": instance_id,
+            "include_properties": True
+        }))
+        assert got["target"]["type_fqn"] == "UnityEngine.Rigidbody"
+        assert got["property_count"] > 0
+
+        mod = ok(call("object-modify", {
+            "instance_id": instance_id,
+            "properties": {"m_Mass": 3.5}
+        }))
+        assert mod["applied_count"] == 1
+        assert mod["applied_fields"][0]["field"] == "m_Mass"
+        assert abs(mod["applied_fields"][0]["after"] - 3.5) < 1e-6
+    finally:
+        ok(call("gameobject-destroy", {"path": name}))
+
+
+def test_gap_utility_reads():
+    """New discovery utilities return useful data without requiring clicks."""
+    builtins = ok(call("asset-find-built-in", {"type": "Shader", "limit": 25}))
+    assert "match_count" in builtins
+    assert "warnings" in builtins
+
+    shaders = ok(call("asset-shader-list-all", {"limit": 100}))
+    assert shaders["shader_count"] > 0
+
+    components = ok(call("component-list-all", {"name_like": "Rigid", "limit": 100}))
+    assert components["component_type_count"] > 0
+
+
+def test_scene_set_active_unload_roundtrip():
+    """scene-set-active and scene-unload work together in a safe additive flow."""
+    settings = ok(call("project-build-settings"))
+    assert settings["enabled_scene_count"] > 0
+    base_path = settings["scenes_in_build"][0]["path"]
+    temp_path = f"Assets/ReifyContract/_scene_{int(time.time() * 1000)}.unity"
+
+    ok(call("scene-open", {"path": base_path, "additive": False}))
+    try:
+        ok(call("scene-create", {"path": temp_path, "setup_default": False}))
+        ok(call("scene-open", {"path": base_path, "additive": True}))
+        time.sleep(0.2)
+
+        active = ok(call("scene-set-active", {"path": base_path}))
+        assert active["active_scene"]["path"] == base_path
+
+        unloaded = ok(call("scene-unload", {"path": temp_path}))
+        assert unloaded["unloaded"]["path"] == temp_path
+        assert unloaded["remaining_open_scene_count"] >= 1
+    finally:
+        ok(call("scene-open", {"path": base_path, "additive": False}))
+        ok(call("asset-delete", {"path": temp_path, "use_trash": False}))
+
+
+def test_prefab_save_roundtrip():
+    """prefab-save persists prefab-mode modifications and can be read back."""
+    name = f"_prefab_{int(time.time() * 1000)}"
+    prefab_path = f"Assets/ReifyContract/{name}.prefab"
+    base_path = "Assets/Scenes/SampleScene.unity"
+
+    ok(call("scene-open", {"path": base_path, "additive": False}))
+    ok(call("gameobject-create", {"name": name}))
+    try:
+        ok(call("prefab-create", {
+            "gameobject_path": name,
+            "asset_path": prefab_path,
+            "connect_instance": False
+        }))
+        ok(call("gameobject-destroy", {"path": name}))
+
+        opened = ok(call("prefab-open", {"asset_path": prefab_path}))
+        root = opened["stage"]["prefab_name"]
+        ok(call("gameobject-modify", {
+            "path": root,
+            "local_position": {"x": 2.0, "y": 0.0, "z": 0.0}
+        }))
+        saved = ok(call("prefab-save"))
+        assert saved["prefab"]["asset_path"] == prefab_path
+        ok(call("prefab-close"))
+
+        reopened = ok(call("prefab-open", {"asset_path": prefab_path}))
+        root2 = reopened["stage"]["prefab_name"]
+        found = ok(call("gameobject-find", {"path": root2}))
+        assert found["match_count"] == 1
+        pos = found["matches"][0]["transform"]["local_position"]
+        assert pos["x"] == 2.0
+        ok(call("prefab-close"))
+    finally:
+        call("prefab-close")
+        ok(call("scene-open", {"path": base_path, "additive": False}))
+        ok(call("asset-delete", {"path": prefab_path, "use_trash": False}))
 
 
 def test_error_discrimination_unknown_tool():
