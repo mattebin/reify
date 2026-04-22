@@ -156,9 +156,8 @@ namespace Reify.Editor.Tools
 
                 var probeDirs = new[]
                 {
-                    Path.Combine(editorDataPath, "DotNetSdkRoslyn"),
-                    Path.Combine(editorDataPath, "MonoBleedingEdge", "lib", "mono", "4.5"),
                     Path.Combine(editorDataPath, "MonoBleedingEdge", "lib", "mono", "msbuild", "Current", "bin", "Roslyn"),
+                    Path.Combine(editorDataPath, "MonoBleedingEdge", "lib", "mono", "4.5"),
                     Path.Combine(editorDataPath, "Tools", "BuildPipeline", "Compilation", "ApiUpdater")
                 };
 
