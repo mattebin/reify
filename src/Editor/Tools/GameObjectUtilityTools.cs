@@ -48,6 +48,17 @@ namespace Reify.Editor.Tools
                 {
                     source      = GameObjectDto.Build(source, includeComponents: false),
                     duplicate   = GameObjectDto.Build(duplicate, includeComponents: false),
+                    applied_fields = new object[]
+                    {
+                        new { field = "source_instance_id",
+                              before = (int?)null,
+                              after  = GameObjectResolver.InstanceIdOf(duplicate),
+                              note = "new GameObject created, original unchanged" },
+                        new { field = "duplicate_path",
+                              before = (string)null,
+                              after  = GameObjectResolver.PathOf(duplicate) }
+                    },
+                    applied_count = 2,
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };
@@ -84,11 +95,19 @@ namespace Reify.Editor.Tools
                 }
 
                 EditorUtility.SetDirty(go);
+                var afterParentPath = go.transform.parent != null
+                    ? GameObjectResolver.PathOf(go.transform.parent.gameObject) : "";
 
                 return new
                 {
                     previous_parent_path = previousParentPath,
                     gameobject           = GameObjectDto.Build(go, includeComponents: false),
+                    applied_fields       = new object[]
+                    {
+                        new { field = "parent_path",
+                              before = previousParentPath, after = afterParentPath }
+                    },
+                    applied_count        = 1,
                     read_at_utc          = DateTime.UtcNow.ToString("o"),
                     frame                = (long)Time.frameCount
                 };
