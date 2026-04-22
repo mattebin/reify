@@ -149,7 +149,18 @@ namespace Reify.Editor.Bridge
                 using (var reader = new StreamReader(ctx.Request.InputStream, Encoding.UTF8))
                     body = await reader.ReadToEndAsync();
 
-                var envelope = JObject.Parse(body);
+                // DateParseHandling.None is critical: without it, Newtonsoft
+                // auto-coerces any ISO-8601 string (e.g. last_write_utc)
+                // into a DateTime, and subsequent .Value<string>() reformats
+                // it with the culture default — silently corrupting every
+                // roundtrip where a tool receives a prior tool's output.
+                // See the asset-diff phantom-modification bug found in
+                // live validation.
+                using var reader2 = new Newtonsoft.Json.JsonTextReader(new StringReader(body))
+                {
+                    DateParseHandling = Newtonsoft.Json.DateParseHandling.None
+                };
+                var envelope = JObject.Load(reader2);
                 var tool = envelope.Value<string>("tool");
                 var args = envelope["args"];
 
@@ -163,6 +174,22 @@ namespace Reify.Editor.Bridge
                 try
                 {
                     data = await handler(args);
+                }
+                catch (UnityEngine.MissingComponentException ex)
+                {
+                    // Unity throws this with a verbose, user-script-oriented
+                    // message ("You probably need to add a X to the game
+                    // object Y. Or your script needs to..."). Surface as a
+                    // clean structured code so callers can discriminate
+                    // "component not found" from generic failures.
+                    await WriteError(ctx, 404, "COMPONENT_NOT_FOUND",
+                        ExtractMissingComponentMessage(ex.Message));
+                    return;
+                }
+                catch (ArgumentException ex)
+                {
+                    await WriteError(ctx, 400, "INVALID_ARGS", ex.Message);
+                    return;
                 }
                 catch (Exception ex)
                 {
@@ -192,6 +219,21 @@ namespace Reify.Editor.Bridge
                 try { await WriteError(ctx, 500, "BRIDGE_FAILURE", ex.Message); }
                 catch { /* connection already gone */ }
             }
+        }
+
+        /// <summary>
+        /// Unity's MissingComponentException.Message starts with the useful
+        /// first sentence ("There is no 'X' attached to the 'Y' game object,
+        /// but a script is trying to access it.") and then appends a long
+        /// diagnostic for end-user script authors. We keep only the first
+        /// sentence so the structured error stays clean.
+        /// </summary>
+        private static string ExtractMissingComponentMessage(string full)
+        {
+            if (string.IsNullOrEmpty(full)) return "Component not found.";
+            var idx = full.IndexOf('.');
+            if (idx > 0 && idx < full.Length - 1) return full.Substring(0, idx + 1).Trim();
+            return full.Trim();
         }
 
         private static async Task WriteError(HttpListenerContext ctx, int status, string code, string message)

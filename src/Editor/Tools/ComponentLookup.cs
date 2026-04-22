@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Reify.Editor.Tools
@@ -14,6 +15,47 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class ComponentLookup
     {
+        /// <summary>
+        /// Read a GameObject-path argument accepting both aliases so
+        /// callers don't have to memorise which tool uses which name.
+        /// Canonical is `gameobject_path`; `path` and `go_path` also accepted.
+        /// </summary>
+        public static string ReadGameObjectPathArg(JToken args)
+            => args?.Value<string>("gameobject_path")
+               ?? args?.Value<string>("path")
+               ?? args?.Value<string>("go_path");
+
+        /// <summary>
+        /// Read a component-type argument accepting both aliases.
+        /// Canonical is `component_type`; `type_name` and `type` also accepted.
+        /// </summary>
+        public static string ReadComponentTypeArg(JToken args)
+            => args?.Value<string>("component_type")
+               ?? args?.Value<string>("type_name")
+               ?? args?.Value<string>("type");
+
+        /// <summary>
+        /// Read an instance_id argument tolerantly — accepts `instance_id`
+        /// or (component-specific alias) `component_instance_id`.
+        /// </summary>
+        public static int? ReadInstanceIdArg(JToken args)
+        {
+            var t = args?["instance_id"];
+            if (t != null && t.Type == JTokenType.Integer) return t.Value<int>();
+            var t2 = args?["component_instance_id"];
+            if (t2 != null && t2.Type == JTokenType.Integer) return t2.Value<int>();
+            return null;
+        }
+
+        /// <summary>
+        /// One-shot: pull the three standard resolver args from the envelope
+        /// (with aliases) and hand back a Component.
+        /// </summary>
+        public static Component ResolveFromArgs(JToken args)
+            => Resolve(ReadInstanceIdArg(args),
+                       ReadGameObjectPathArg(args),
+                       ReadComponentTypeArg(args));
+
         public static Component Resolve(int? instanceId, string gameObjectPath, string componentType)
         {
             if (instanceId.HasValue)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Reify.Editor.Bridge;
@@ -13,6 +14,12 @@ namespace Reify.Editor.Tools
 {
     internal static class PackageTools
     {
+        // package-search bypasses the shared RunRequestAsync helper because
+        // live validation found NRE paths that weren't reachable from that
+        // helper's catch points on Unity 6 — specifically around
+        // request.IsCompleted / request.Status access. Inlined so every
+        // step has its own try/catch and surfaces a `[step=X]` trace on
+        // failure instead of a bare "Object reference not set".
         [ReifyTool("package-search")]
         public static Task<object> Search(JToken args)
         {
@@ -20,17 +27,139 @@ namespace Reify.Editor.Tools
             var includePreview = args?.Value<bool?>("include_preview") ?? false;
             var offlineMode    = args?.Value<bool?>("offline_mode") ?? false;
 
-            return RunRequestAsync(
-                () => Client.SearchAll(offlineMode),
-                request =>
+            // Inlined (not RunRequestAsync) so every single reference access
+            // is wrapped and any residual NRE gets a traceable message.
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            _ = MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                try
                 {
-                    var installed = InstalledPackagesByName();
-                    var packages = new List<object>();
-                    foreach (var package in request.Result)
+                    SearchRequest request;
+                    try { request = Client.SearchAll(offlineMode); }
+                    catch (Exception ex)
                     {
-                        if (!MatchesQuery(package, query)) continue;
-                        if (!includePreview && IsPreviewVersion(package.version)) continue;
-                        packages.Add(PackageSummary(package, installed));
+                        tcs.TrySetException(new InvalidOperationException(
+                            $"[step=Client.SearchAll] {ex.GetType().Name}: {ex.Message}", ex));
+                        return null;
+                    }
+                    if (request == null)
+                    {
+                        tcs.TrySetException(new InvalidOperationException(
+                            "[step=Client.SearchAll] returned null"));
+                        return null;
+                    }
+
+                    var startedAt = EditorApplication.timeSinceStartup;
+                    EditorApplication.CallbackFunction poll = null;
+                    poll = () =>
+                    {
+                        try
+                        {
+                            bool done;
+                            try { done = request.IsCompleted; }
+                            catch (Exception ex)
+                            {
+                                EditorApplication.update -= poll;
+                                tcs.TrySetException(new InvalidOperationException(
+                                    $"[step=request.IsCompleted] {ex.GetType().Name}: {ex.Message}", ex));
+                                return;
+                            }
+                            if (!done)
+                            {
+                                if ((EditorApplication.timeSinceStartup - startedAt) * 1000d > 30000d)
+                                {
+                                    EditorApplication.update -= poll;
+                                    tcs.TrySetException(new TimeoutException("package-search timed out after 30s."));
+                                }
+                                return;
+                            }
+                            EditorApplication.update -= poll;
+
+                            StatusCode status;
+                            try { status = request.Status; }
+                            catch (Exception ex)
+                            {
+                                tcs.TrySetException(new InvalidOperationException(
+                                    $"[step=request.Status] {ex.GetType().Name}: {ex.Message}", ex));
+                                return;
+                            }
+
+                            if (status != StatusCode.Success)
+                            {
+                                var msg = "unknown";
+                                try { msg = request.Error?.message ?? status.ToString(); } catch { }
+                                tcs.TrySetException(new InvalidOperationException($"package-search failed: {msg}"));
+                                return;
+                            }
+
+                            try
+                            {
+                                tcs.TrySetResult(ProjectSearchResult(request, query, includePreview, offlineMode));
+                            }
+                            catch (Exception ex)
+                            {
+                                tcs.TrySetException(new InvalidOperationException(
+                                    $"[step=project] {ex.GetType().Name}: {ex.Message} " +
+                                    $"at {ex.StackTrace?.Split('\n').FirstOrDefault()?.Trim()}", ex));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            EditorApplication.update -= poll;
+                            tcs.TrySetException(new InvalidOperationException(
+                                $"[step=poll outer] {ex.GetType().Name}: {ex.Message}", ex));
+                        }
+                    };
+                    EditorApplication.update += poll;
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(new InvalidOperationException(
+                        $"[step=schedule] {ex.GetType().Name}: {ex.Message}", ex));
+                    return null;
+                }
+            });
+
+            return tcs.Task;
+        }
+
+        private static object ProjectSearchResult(SearchRequest request, string query, bool includePreview, bool offlineMode)
+        {
+                    // Every reference access wrapped so any residual null
+                    // source gets reported with a traceable message
+                    // instead of a bare "Object reference not set".
+                    Dictionary<string, PackageManagerPackageInfo> installed;
+                    try { installed = InstalledPackagesByName(); }
+                    catch (Exception ex)
+                    { throw new InvalidOperationException($"InstalledPackagesByName failed: {ex.Message}", ex); }
+
+                    var packages = new List<object>();
+                    PackageManagerPackageInfo[] results;
+                    try { results = request.Result; }
+                    catch (Exception ex)
+                    { throw new InvalidOperationException($"request.Result access failed: {ex.Message}", ex); }
+
+                    if (results != null)
+                    {
+                        for (var i = 0; i < results.Length; i++)
+                        {
+                            var package = results[i];
+                            try
+                            {
+                                if (package == null) continue;
+                                if (!MatchesQuery(package, query)) continue;
+                                if (!includePreview && IsPreviewVersion(package.version)) continue;
+                                packages.Add(PackageSummary(package, installed));
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new InvalidOperationException(
+                                    $"Package[{i}] '{package?.name ?? "<null>"}' processing failed: " +
+                                    $"{ex.GetType().Name}: {ex.Message}", ex);
+                            }
+                        }
                     }
 
                     return new
@@ -43,8 +172,6 @@ namespace Reify.Editor.Tools
                         read_at_utc     = DateTime.UtcNow.ToString("o"),
                         frame           = (long)Time.frameCount
                     };
-                },
-                "package-search");
         }
 
         [ReifyTool("package-add")]
@@ -169,9 +296,17 @@ namespace Reify.Editor.Tools
         private static Dictionary<string, PackageManagerPackageInfo> InstalledPackagesByName()
         {
             var map = new Dictionary<string, PackageManagerPackageInfo>(StringComparer.OrdinalIgnoreCase);
+            // GetAllRegisteredPackages can return null before the first
+            // package-manager registration pass completes — the symptom was
+            // a raw "Object reference not set to an instance of an object"
+            // from package-search.
             var installed = PackageManagerPackageInfo.GetAllRegisteredPackages();
+            if (installed == null) return map;
             foreach (var package in installed)
+            {
+                if (package == null || string.IsNullOrEmpty(package.name)) continue;
                 map[package.name] = package;
+            }
             return map;
         }
 

@@ -130,7 +130,23 @@ namespace Reify.Editor.Tools
                 if (layer < 0 || layer >= animator.layerCount)
                     throw new ArgumentException($"layer {layer} out of range [0..{animator.layerCount - 1}].");
 
+                var beforeState = animator.GetCurrentAnimatorStateInfo(layer);
+                var beforeStateHash = beforeState.fullPathHash;
+                var beforeNormTime  = beforeState.normalizedTime;
+                var beforeInTrans   = animator.IsInTransition(layer);
+
                 animator.CrossFade(state, duration, layer);
+
+                // CrossFade is frame-delayed; read-back shows the queued
+                // target more than the current state. Report both so the
+                // caller can reason about "transition queued" vs "already
+                // at target".
+                var afterState = animator.GetCurrentAnimatorStateInfo(layer);
+                var afterInTrans = animator.IsInTransition(layer);
+                var afterNextState = afterInTrans
+                    ? animator.GetNextAnimatorStateInfo(layer).fullPathHash
+                    : 0;
+
                 return new
                 {
                     animator = new
@@ -141,8 +157,19 @@ namespace Reify.Editor.Tools
                     state_name          = state,
                     layer,
                     transition_duration = duration,
-                    read_at_utc         = DateTime.UtcNow.ToString("o"),
-                    frame               = (long)Time.frameCount
+                    applied_fields = new object[]
+                    {
+                        new { field = "current_state_hash",
+                              before = beforeStateHash, after = afterState.fullPathHash },
+                        new { field = "is_in_transition",
+                              before = beforeInTrans, after = afterInTrans },
+                        new { field = "next_state_hash",
+                              before = 0, after = afterNextState,
+                              note  = "non-zero = transition queued toward the requested state" }
+                    },
+                    applied_count = 3,
+                    read_at_utc   = DateTime.UtcNow.ToString("o"),
+                    frame         = (long)Time.frameCount
                 };
             });
         }
@@ -166,7 +193,16 @@ namespace Reify.Editor.Tools
                 if (layer < 0 || layer >= animator.layerCount)
                     throw new ArgumentException($"layer {layer} out of range [0..{animator.layerCount - 1}].");
 
+                var beforeState = animator.GetCurrentAnimatorStateInfo(layer);
+                var beforeStateHash = beforeState.fullPathHash;
+                var beforeNormTime  = beforeState.normalizedTime;
+
                 animator.Play(state, layer, normTime);
+                // Play is not frame-delayed for hash change, but normTime
+                // applies on next Update. Read-back reflects the queued
+                // state reference immediately.
+                var afterState = animator.GetCurrentAnimatorStateInfo(layer);
+
                 return new
                 {
                     animator = new
@@ -177,8 +213,17 @@ namespace Reify.Editor.Tools
                     state_name      = state,
                     layer,
                     normalized_time = normTime,
-                    read_at_utc     = DateTime.UtcNow.ToString("o"),
-                    frame           = (long)Time.frameCount
+                    applied_fields  = new object[]
+                    {
+                        new { field = "current_state_hash",
+                              before = beforeStateHash, after = afterState.fullPathHash },
+                        new { field = "normalized_time_request",
+                              before = beforeNormTime, after = normTime,
+                              note  = "applies on the next Animator update" }
+                    },
+                    applied_count = 2,
+                    read_at_utc   = DateTime.UtcNow.ToString("o"),
+                    frame         = (long)Time.frameCount
                 };
             });
         }

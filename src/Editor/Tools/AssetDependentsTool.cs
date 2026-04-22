@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace Reify.Editor.Tools
     /// </summary>
     internal static class AssetDependentsTool
     {
-        // Cache: target_path → direct_dependents[]. Rebuilt on AssetDatabase
+        // Cache: target_path > direct_dependents[]. Rebuilt on AssetDatabase
         // changes via AssetMutationListener below. Memory cost: ~100KB per
         // 10k-asset project.
         private static Dictionary<string, List<string>> _reverseIndex;

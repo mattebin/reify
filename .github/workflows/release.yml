@@ -1,0 +1,87 @@
+name: release
+
+# Tag-driven prebuilt `reify-server` release. Pushes a framework-dependent
+# single-file executable per target platform under the release's assets
+# so end-users never need to `dotnet build` themselves.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            artifact: reify-server-win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: reify-server-linux-x64
+          - os: macos-latest
+            rid: osx-arm64
+            artifact: reify-server-osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        working-directory: src
+        run: dotnet restore
+
+      - name: Publish reify-server (${{ matrix.rid }})
+        working-directory: src
+        run: |
+          dotnet publish Server/Reify.Server.csproj `
+            -c Release `
+            -r ${{ matrix.rid }} `
+            --no-self-contained `
+            -p:PublishSingleFile=true `
+            -o publish/${{ matrix.rid }}
+        shell: pwsh
+
+      - name: Archive (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path src/publish/${{ matrix.rid }}/* `
+            -DestinationPath ${{ matrix.artifact }}.zip
+        shell: pwsh
+
+      - name: Archive (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd src/publish/${{ matrix.rid }}
+          tar -czvf ../../../${{ matrix.artifact }}.tar.gz .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            ${{ matrix.artifact }}.zip
+            ${{ matrix.artifact }}.tar.gz
+          if-no-files-found: ignore
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
+          generate_release_notes: true

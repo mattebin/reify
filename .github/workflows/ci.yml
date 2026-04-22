@@ -1,0 +1,32 @@
+name: ci
+
+# Smoke-build the .NET server + Shared projects on every push + PR. The
+# Unity Editor assembly is not built here — that would require a Unity
+# license runner. Unity-side validation stays in the vault run logs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        working-directory: src
+        run: dotnet restore
+
+      - name: Build (Release)
+        working-directory: src
+        run: dotnet build Server/Reify.Server.csproj -c Release --no-restore
+
+      - name: Ensure server binary emitted
+        working-directory: src
+        run: test -f Server/bin/Release/net8.0/reify-server.dll

@@ -148,6 +148,10 @@ namespace Reify.Editor.Tools
                         "Reverse-dependency scan (who references THIS) not performed — " +
                         "deleting may orphan references in scenes/prefabs.");
 
+                // Capture pre-delete provenance so the receipt includes the
+                // full {path, guid, type_fqn, instance_id} we just removed.
+                var deletedSummary = AssetProvenance.Summarize(path);
+
                 var ok = useTrash
                     ? AssetDatabase.MoveAssetToTrash(path)
                     : AssetDatabase.DeleteAsset(path);
@@ -161,6 +165,8 @@ namespace Reify.Editor.Tools
                 return new
                 {
                     deleted = new { path, guid, use_trash = useTrash },
+                    deleted_provenance = deletedSummary,
+                    guids_touched = new[] { deletedSummary },
                     dependencies = dependencies,
                     warnings,
                     read_at_utc = DateTime.UtcNow.ToString("o"),
@@ -241,6 +247,13 @@ namespace Reify.Editor.Tools
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
+                // Capture the guid pre-op so the receipt can prove it was
+                // preserved across the rename (GUID stability is the whole
+                // point of AssetDatabase.RenameAsset vs File.Move).
+                var beforeGuid = AssetDatabase.AssetPathToGUID(path);
+                if (string.IsNullOrEmpty(beforeGuid))
+                    throw new InvalidOperationException($"Asset not found: {path}");
+
                 var err = AssetDatabase.RenameAsset(path, newName);
                 if (!string.IsNullOrEmpty(err))
                     throw new InvalidOperationException($"RenameAsset failed: {err}");
@@ -248,10 +261,22 @@ namespace Reify.Editor.Tools
 
                 var newPath = Path.GetDirectoryName(path)?.Replace('\\', '/') + "/" + newName +
                               (Path.HasExtension(path) ? Path.GetExtension(path) : "");
+                var afterGuid = AssetDatabase.AssetPathToGUID(newPath);
+
                 return new
                 {
                     renamed     = new { from = path, to = newPath },
                     asset       = AssetSummary(newPath),
+                    applied_fields = new object[]
+                    {
+                        new { field = "asset_path", before = path, after = newPath },
+                        new { field = "guid",       before = beforeGuid, after = afterGuid,
+                              note = "guid preserved across rename — proves it's a rename, not a delete+create" }
+                    },
+                    applied_count      = 2,
+                    guids_touched      = new[] { afterGuid },
+                    source_provenance  = new { path = path,    guid = beforeGuid },
+                    destination_provenance = AssetProvenance.Summarize(newPath),
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };
@@ -267,15 +292,32 @@ namespace Reify.Editor.Tools
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
+                var beforeGuid = AssetDatabase.AssetPathToGUID(from);
+                if (string.IsNullOrEmpty(beforeGuid))
+                    throw new InvalidOperationException($"Asset not found: {from}");
+
                 EnsureParentFolder(to);
                 var err = AssetDatabase.MoveAsset(from, to);
                 if (!string.IsNullOrEmpty(err))
                     throw new InvalidOperationException($"MoveAsset failed: {err}");
                 AssetDatabase.SaveAssets();
+
+                var afterGuid = AssetDatabase.AssetPathToGUID(to);
+
                 return new
                 {
                     moved       = new { from, to },
                     asset       = AssetSummary(to),
+                    applied_fields = new object[]
+                    {
+                        new { field = "asset_path", before = from, after = to },
+                        new { field = "guid",       before = beforeGuid, after = afterGuid,
+                              note = "guid preserved across move — references in scenes/prefabs remain valid" }
+                    },
+                    applied_count      = 2,
+                    guids_touched      = new[] { afterGuid },
+                    source_provenance  = new { path = from, guid = beforeGuid },
+                    destination_provenance = AssetProvenance.Summarize(to),
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };
@@ -302,10 +344,15 @@ namespace Reify.Editor.Tools
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
 
+                var sourceProv = AssetProvenance.Summarize(from);
+                var destProv   = AssetProvenance.Summarize(to);
                 return new
                 {
                     copied      = new { from, to },
                     asset       = AssetSummary(to),
+                    source_provenance = sourceProv,
+                    destination_provenance = destProv,
+                    guids_touched = new[] { sourceProv, destProv },
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };
@@ -414,9 +461,18 @@ namespace Reify.Editor.Tools
 
         private static object AssetSummaryEnvelope(string path) => new
         {
-            asset       = AssetSummary(path),
-            read_at_utc = DateTime.UtcNow.ToString("o"),
-            frame       = (long)Time.frameCount
+            asset               = AssetSummary(path),
+            // ADR-002: asset creation proves before=absent, after=provenance.
+            applied_fields      = new object[]
+            {
+                new { field = "asset_exists", path = path,
+                      before = (object)false, after = (object)true }
+            },
+            applied_count       = 1,
+            created_provenance  = AssetProvenance.Summarize(path),
+            guids_touched       = new[] { AssetDatabase.AssetPathToGUID(path) },
+            read_at_utc         = DateTime.UtcNow.ToString("o"),
+            frame               = (long)Time.frameCount
         };
 
         private static void EnsureParentFolder(string assetPath)

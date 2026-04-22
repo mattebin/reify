@@ -1,15 +1,43 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Reify.Editor.Bridge;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
 
 namespace Reify.Editor.Tools
 {
     internal static class EditorOpsTools
     {
+        // ---------- editor-request-script-compilation ----------
+        // When Unity is in the background, saved-file changes don't trigger
+        // a script recompile until the editor regains focus. This tool
+        // forces BOTH the compile AND the domain reload remotely so the
+        // fix-and-verify cycle doesn't need alt-tab. On newer Unity the
+        // domain reload after background compile is deferred until focus
+        // unless EditorUtility.RequestScriptReload() is called too.
+        [ReifyTool("editor-request-script-compilation")]
+        public static Task<object> RequestScriptCompilation(JToken _)
+        {
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                CompilationPipeline.RequestScriptCompilation();
+                // RequestScriptReload forces the domain to cycle once compile
+                // finishes, even when the editor is unfocused.
+                EditorUtility.RequestScriptReload();
+                return new
+                {
+                    requested      = true,
+                    note           = "Compile + reload requested. Poll domain-reload-status " +
+                                     "until last_domain_reload_utc advances past read_at_utc.",
+                    read_at_utc    = DateTime.UtcNow.ToString("o"),
+                    frame          = (long)Time.frameCount
+                };
+            });
+        }
+
         // ---------- editor-menu-execute ----------
         [ReifyTool("editor-menu-execute")]
         public static Task<object> MenuExecute(JToken args)
@@ -84,7 +112,7 @@ namespace Reify.Editor.Tools
             {
                 // Undo.GetRecords exists on some Unity versions as a public
                 // API and on others only via reflection. Try reflection so
-                // this compiles across the 2021.3 → 6.x range we target.
+                // this compiles across the 2021.3 > 6.x range we target.
                 var undoList = new List<string>();
                 var redoList = new List<string>();
                 var m = typeof(UnityEditor.Undo).GetMethod("GetRecords",

@@ -34,6 +34,7 @@ namespace Reify.Editor.Tools
                 if (saved == null)
                     throw new InvalidOperationException($"Prefab save failed. Check Unity Console.");
 
+                var prov = AssetProvenance.Summarize(assetPath);
                 return new
                 {
                     prefab = new
@@ -43,6 +44,8 @@ namespace Reify.Editor.Tools
                         name       = saved.name
                     },
                     instance    = connect ? GameObjectDto.Build(go, includeComponents: false) : null,
+                    prefab_provenance = prov,
+                    guids_touched = new[] { prov },
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };
