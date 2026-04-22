@@ -27,10 +27,10 @@ contains:
 - a Unity Editor package (`com.reify.unity`)
 - a localhost HTTP bridge between the server and Unity
 - shared contracts used by the server transport
-- `167` MCP tools in the current local codebase
+- over **230** MCP tools (call `reify-tool-list` for the live inventory)
 - first-class MCP resources and prompts for discovery and guidance
 
-Current local scope is broad editor-side coverage across roughly 26 domains,
+Current local scope is broad editor-side coverage across roughly 56 domains,
 including scene/gameobject/component/asset/prefab work, scripts, packages,
 physics, animator, audio, navigation, UI, particles, profiler, tilemap,
 terrain, import settings, builds, scriptable objects, animation clips, input
@@ -53,10 +53,10 @@ Highlights that reflect the project's philosophy:
 - MCP prompts for structured diagnosis, safe change loops, and capability
   escalation
 
-Latest local notes report 150 tools validated live against Unity `6000.4.3f1`,
-with the newer MCP resource/prompt layer plus the tests/asmdef/project-config
-batch scratch-built locally. Development is still local-first, so the local
-worktree may be ahead of pushed GitHub state.
+Latest tools validated live against Unity `6000.4.3f1`. The python integration
+contract suite under `tests/integration/` covers the critical path (ping,
+read-evidence shape, write-receipt shape, error discrimination,
+spatial proofs, ADR-002 receipts).
 
 ## Architecture
 
