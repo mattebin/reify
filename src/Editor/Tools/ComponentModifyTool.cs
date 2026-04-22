@@ -13,16 +13,12 @@ namespace Reify.Editor.Tools
         [ReifyTool("component-modify")]
         public static Task<object> Handle(JToken args)
         {
-            var instanceId = args?["instance_id"]?.Type == JTokenType.Integer
-                ? args.Value<int?>("instance_id") : null;
-            var goPath     = args?.Value<string>("gameobject_path");
-            var compType   = args?.Value<string>("component_type");
             var properties = args?["properties"] as JObject
                 ?? throw new ArgumentException("'properties' object is required.");
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                var component = ComponentLookup.Resolve(instanceId, goPath, compType);
+                var component = ComponentLookup.ResolveFromArgs(args);
                 Undo.RecordObject(component, $"Reify: modify {component.GetType().Name}");
 
                 using var so = new SerializedObject(component);

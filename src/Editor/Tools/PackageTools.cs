@@ -26,11 +26,19 @@ namespace Reify.Editor.Tools
                 {
                     var installed = InstalledPackagesByName();
                     var packages = new List<object>();
-                    foreach (var package in request.Result)
+                    // SearchAll can return Success with a null Result when
+                    // the registry is unreachable or the query returns
+                    // nothing — guard rather than NRE.
+                    var results = request.Result;
+                    if (results != null)
                     {
-                        if (!MatchesQuery(package, query)) continue;
-                        if (!includePreview && IsPreviewVersion(package.version)) continue;
-                        packages.Add(PackageSummary(package, installed));
+                        foreach (var package in results)
+                        {
+                            if (package == null) continue;
+                            if (!MatchesQuery(package, query)) continue;
+                            if (!includePreview && IsPreviewVersion(package.version)) continue;
+                            packages.Add(PackageSummary(package, installed));
+                        }
                     }
 
                     return new

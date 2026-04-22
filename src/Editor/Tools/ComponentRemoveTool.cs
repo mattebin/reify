@@ -12,14 +12,9 @@ namespace Reify.Editor.Tools
         [ReifyTool("component-remove")]
         public static Task<object> Handle(JToken args)
         {
-            var instanceId = args?["instance_id"]?.Type == JTokenType.Integer
-                ? args.Value<int?>("instance_id") : null;
-            var goPath     = args?.Value<string>("gameobject_path");
-            var compType   = args?.Value<string>("component_type");
-
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                var component = ComponentLookup.Resolve(instanceId, goPath, compType);
+                var component = ComponentLookup.ResolveFromArgs(args);
 
                 // Transform can never be removed.
                 if (component is Transform)

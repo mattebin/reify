@@ -13,8 +13,10 @@ namespace Reify.Editor.Tools
         [ReifyTool("component-add")]
         public static Task<object> Handle(JToken args)
         {
-            var path     = args?.Value<string>("path")      ?? throw new ArgumentException("path is required");
-            var typeName = args?.Value<string>("type_name") ?? throw new ArgumentException("type_name is required");
+            var path     = ComponentLookup.ReadGameObjectPathArg(args)
+                ?? throw new ArgumentException("gameobject_path (alias: path) is required.");
+            var typeName = ComponentLookup.ReadComponentTypeArg(args)
+                ?? throw new ArgumentException("component_type (alias: type_name) is required.");
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {

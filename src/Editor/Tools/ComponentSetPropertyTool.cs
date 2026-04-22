@@ -21,10 +21,6 @@ namespace Reify.Editor.Tools
         [ReifyTool("component-set-property")]
         public static Task<object> Handle(JToken args)
         {
-            var instanceId = args?["instance_id"]?.Type == JTokenType.Integer
-                ? args.Value<int?>("instance_id") : null;
-            var goPath       = args?.Value<string>("gameobject_path");
-            var compType     = args?.Value<string>("component_type");
             var propertyPath = args?.Value<string>("property_path")
                 ?? throw new ArgumentException("property_path is required.");
             var value        = args?["value"]
@@ -32,7 +28,7 @@ namespace Reify.Editor.Tools
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                var component = ComponentLookup.Resolve(instanceId, goPath, compType);
+                var component = ComponentLookup.ResolveFromArgs(args);
                 Undo.RecordObject(component, $"Reify: set {propertyPath} on {component.GetType().Name}");
 
                 using var so = new SerializedObject(component);

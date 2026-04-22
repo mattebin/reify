@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -13,19 +13,20 @@ namespace Reify.Editor.Tools
         [ReifyTool("component-get")]
         public static Task<object> Handle(JToken args)
         {
-            var path       = args?.Value<string>("path");
-            var instanceId = args?["instance_id"]?.Type == JTokenType.Integer
-                ? args.Value<int?>("instance_id") : null;
+            var path       = ComponentLookup.ReadGameObjectPathArg(args);
+            var instanceId = ComponentLookup.ReadInstanceIdArg(args);
             var includeProperties = args?.Value<bool?>("include_properties") ?? false;
 
             if (string.IsNullOrEmpty(path) && !instanceId.HasValue)
-                throw new ArgumentException("Provide either 'path' (GameObject) or 'instance_id' (GameObject or Component).");
+                throw new ArgumentException(
+                    "Provide either 'gameobject_path' (alias: path) or 'instance_id' " +
+                    "(GameObject or Component).");
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
                 // Two modes:
-                //   path or gameobject instance_id → list components on that GameObject.
-                //   component instance_id           → return that one component's properties.
+                //   path or gameobject instance_id > list components on that GameObject.
+                //   component instance_id           > return that one component's properties.
                 if (instanceId.HasValue)
                 {
                     var obj = GameObjectResolver.ByInstanceId(instanceId.Value);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -192,7 +192,7 @@ namespace Reify.Editor.Tools
             lock (_lock)
             {
                 var result = new List<LogEntry>(Capacity);
-                // Walk oldest → newest. If buffer not yet wrapped, _writeIndex == count.
+                // Walk oldest > newest. If buffer not yet wrapped, _writeIndex == count.
                 if (_totalSeen < Capacity)
                 {
                     for (var i = 0; i < _writeIndex; i++) result.Add(_buffer[i]);

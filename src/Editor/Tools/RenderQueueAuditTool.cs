@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -186,7 +186,7 @@ namespace Reify.Editor.Tools
                 w.Add($"{overlapPairs} transparent-renderer bounds-overlap pair(s) detected — sort order depends on camera position. Consider camera-split, render-queue offsets, or sorting layers.");
 
             // 2. Sprite pileup: multiple SpriteRenderers at the same (layer, order)
-            //    with overlapping bounds → z-fighting / arbitrary layering.
+            //    with overlapping bounds > z-fighting / arbitrary layering.
             var pile = new Dictionary<string, int>();
             var pileOverlap = new Dictionary<string, int>();
             var spriteRows = rows.FindAll(r => r.Renderer is SpriteRenderer);

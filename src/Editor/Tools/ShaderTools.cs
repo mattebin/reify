@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -78,7 +78,7 @@ namespace Reify.Editor.Tools
                 }
 
                 // Global + local keywords (Unity 2021.2+). Wrapped because
-                // LocalKeyword fields shifted between 2021.2 → 2023.
+                // LocalKeyword fields shifted between 2021.2 > 2023.
                 var keywords = new List<object>();
                 try
                 {

@@ -8,23 +8,36 @@ using UnityEngine;
 namespace Reify.Editor.Tools
 {
     /// <summary>
-    /// Frame Debugger surface. The public API is thin — most of what we
-    /// want lives on internal <see cref="UnityEditorInternal.FrameDebuggerUtility"/>.
-    /// Reached reflectively so the tools compile on Unity versions where
-    /// the symbols drift.
+    /// Frame Debugger surface. Unity moved / renamed the editor API
+    /// across versions:
+    ///  - 2019..5: `UnityEditorInternal.FrameDebuggerUtility`
+    ///  - Unity 6: public `UnityEditor.FrameDebugger` with `enabled` +
+    ///    `EnableFrameDebugger` / `DisableFrameDebugger`
+    /// We try each candidate name across every loaded assembly and fall
+    /// back to property/method probes so the tools work regardless of
+    /// which generation of Unity is running.
     /// </summary>
     internal static class FrameDebuggerTools
     {
-        // In Unity 6 the type moved out of the UnityEditor.dll assembly.
-        // Scan every loaded assembly by full name so we don't hard-code
-        // a specific assembly-qualified name.
+        private static readonly string[] CandidateTypeNames =
+        {
+            "UnityEditorInternal.FrameDebuggerUtility",
+            "UnityEditor.FrameDebuggerUtility",
+            "UnityEditor.Rendering.FrameDebuggerUtility",
+            "UnityEditor.FrameDebugger",
+            "UnityEngine.Rendering.FrameDebugger"
+        };
+
         private static readonly Lazy<Type> Util = new(() =>
         {
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
-                Type t = null;
-                try { t = asm.GetType("UnityEditorInternal.FrameDebuggerUtility", false); } catch { }
-                if (t != null) return t;
+                foreach (var name in CandidateTypeNames)
+                {
+                    Type t = null;
+                    try { t = asm.GetType(name, false); } catch { }
+                    if (t != null) return t;
+                }
             }
             return null;
         });
@@ -35,25 +48,30 @@ namespace Reify.Editor.Tools
         {
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                var t = Util.Value;
-                if (t == null)
-                    throw new InvalidOperationException(
-                        "UnityEditorInternal.FrameDebuggerUtility not found — Unity API drift.");
+                var t = Util.Value
+                    ?? throw new InvalidOperationException(BuildUnsupportedMessage());
 
-                var count = GetStatic<int>(t, "count");
-                var limit = GetStatic<int>(t, "limit");
-                var isLocal = GetStatic<bool>(t, "IsLocalEnabled");
-                var isRemote = GetStatic<bool>(t, "IsRemoteEnabled");
-                var receivingEvents = GetStatic<bool>(t, "receivingRemoteEvents");
+                // Field/property names drift too — probe for any of:
+                //   IsLocalEnabled (pre-6) / enabled (Unity 6)
+                var isEnabled =
+                    TryReadStaticBool(t, "enabled")
+                    ?? TryReadStaticBool(t, "IsLocalEnabled")
+                    ?? false;
+                var isRemote = TryReadStaticBool(t, "IsRemoteEnabled") ?? false;
+                var receiving = TryReadStaticBool(t, "receivingRemoteEvents") ?? false;
+                var count = TryReadStaticInt(t, "count") ?? 0;
+                var limit = TryReadStaticInt(t, "limit") ?? 0;
 
                 return new
                 {
-                    is_enabled_local      = isLocal,
+                    is_enabled            = isEnabled,
                     is_enabled_remote     = isRemote,
-                    receiving_remote      = receivingEvents,
+                    receiving_remote      = receiving,
                     total_event_count     = count,
                     current_event_limit   = limit,
-                    note = "enable via Window > Analysis > Frame Debugger in Unity; these tools only read state.",
+                    resolved_type         = t.FullName,
+                    resolved_assembly     = t.Assembly.GetName().Name,
+                    note = "enable via Window > Analysis > Frame Debugger in Unity.",
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };
@@ -69,50 +87,93 @@ namespace Reify.Editor.Tools
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
-                var t = Util.Value;
-                if (t == null)
+                var t = Util.Value
+                    ?? throw new InvalidOperationException(BuildUnsupportedMessage());
+
+                var before = TryReadStaticBool(t, "enabled")
+                    ?? TryReadStaticBool(t, "IsLocalEnabled") ?? false;
+
+                // Try every known method shape; first one that accepts the
+                // call wins.
+                var invoked = TryInvokeSetEnabled(t, enabled);
+                if (!invoked)
                     throw new InvalidOperationException(
-                        "UnityEditorInternal.FrameDebuggerUtility not found — Unity API drift.");
+                        $"No compatible SetEnabled / EnableFrameDebugger / DisableFrameDebugger " +
+                        $"method on {t.FullName}. Unity API has drifted; frame-debugger-* " +
+                        $"needs a port for this build.");
 
-                var before = GetStatic<bool>(t, "IsLocalEnabled");
-
-                var setMethod = t.GetMethod("SetEnabled",
-                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
-                    null, new[] { typeof(bool), typeof(int) }, null);
-                if (setMethod != null)
-                {
-                    setMethod.Invoke(null, new object[] { enabled, 0 });
-                }
-                else
-                {
-                    var alt = t.GetMethod(enabled ? "EnableFrameDebugger" : "DisableFrameDebugger",
-                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (alt == null)
-                        throw new InvalidOperationException(
-                            "No SetEnabled/Enable*/Disable* method found on FrameDebuggerUtility.");
-                    alt.Invoke(null, null);
-                }
-
-                var after = GetStatic<bool>(t, "IsLocalEnabled");
+                var after = TryReadStaticBool(t, "enabled")
+                    ?? TryReadStaticBool(t, "IsLocalEnabled") ?? false;
 
                 return new
                 {
                     before_enabled = before,
                     after_enabled  = after,
                     requested      = enabled,
+                    resolved_type  = t.FullName,
                     read_at_utc    = DateTime.UtcNow.ToString("o"),
                     frame          = (long)Time.frameCount
                 };
             });
         }
 
-        private static T GetStatic<T>(Type type, string name)
+        // ---------- helpers ----------
+        private static bool TryInvokeSetEnabled(Type t, bool enabled)
         {
-            var p = type.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            if (p != null) try { return (T)Convert.ChangeType(p.GetValue(null), typeof(T)); } catch { }
-            var f = type.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            if (f != null) try { return (T)Convert.ChangeType(f.GetValue(null), typeof(T)); } catch { }
-            return default;
+            // SetEnabled(bool, int)
+            var m1 = t.GetMethod("SetEnabled",
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+                null, new[] { typeof(bool), typeof(int) }, null);
+            if (m1 != null) { m1.Invoke(null, new object[] { enabled, 0 }); return true; }
+
+            // SetEnabled(bool)
+            var m2 = t.GetMethod("SetEnabled",
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+                null, new[] { typeof(bool) }, null);
+            if (m2 != null) { m2.Invoke(null, new object[] { enabled }); return true; }
+
+            // EnableFrameDebugger() / DisableFrameDebugger()
+            var name = enabled ? "EnableFrameDebugger" : "DisableFrameDebugger";
+            var m3 = t.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (m3 != null) { m3.Invoke(null, null); return true; }
+
+            // enabled { set; }
+            var p = t.GetProperty("enabled", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (p != null && p.CanWrite) { p.SetValue(null, enabled); return true; }
+
+            return false;
         }
+
+        private static bool? TryReadStaticBool(Type t, string name)
+        {
+            try
+            {
+                var p = t.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (p != null && p.PropertyType == typeof(bool)) return (bool)p.GetValue(null);
+                var f = t.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (f != null && f.FieldType == typeof(bool)) return (bool)f.GetValue(null);
+            }
+            catch { }
+            return null;
+        }
+
+        private static int? TryReadStaticInt(Type t, string name)
+        {
+            try
+            {
+                var p = t.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (p != null && p.PropertyType == typeof(int)) return (int)p.GetValue(null);
+                var f = t.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (f != null && f.FieldType == typeof(int)) return (int)f.GetValue(null);
+            }
+            catch { }
+            return null;
+        }
+
+        private static string BuildUnsupportedMessage()
+            => "Frame Debugger API not found under any of: "
+               + string.Join(", ", CandidateTypeNames)
+               + ". This Unity build exposes the Frame Debugger under a different name; "
+               + "the tool needs an update. Use Window > Analysis > Frame Debugger manually.";
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -84,7 +84,7 @@ namespace Reify.Editor.Tools
             {
                 // Undo.GetRecords exists on some Unity versions as a public
                 // API and on others only via reflection. Try reflection so
-                // this compiles across the 2021.3 → 6.x range we target.
+                // this compiles across the 2021.3 > 6.x range we target.
                 var undoList = new List<string>();
                 var redoList = new List<string>();
                 var m = typeof(UnityEditor.Undo).GetMethod("GetRecords",

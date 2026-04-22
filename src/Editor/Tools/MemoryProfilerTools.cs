@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -79,7 +79,7 @@ namespace Reify.Editor.Tools
                     size_bytes    = sizeBytes,
                     capture_flags = flags.ToString(),
                     note          = "To open this .snap, install com.unity.memoryprofiler and " +
-                                    "use Window → Analysis → Memory Profiler. The file is a " +
+                                    "use Window > Analysis > Memory Profiler. The file is a " +
                                     "durable artifact — reify produced it without needing the " +
                                     "package installed.",
                     read_at_utc   = DateTime.UtcNow.ToString("o"),

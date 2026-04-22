@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -182,7 +182,7 @@ namespace Reify.Editor.Tools
                 if (bc.a < 1f && rq < 3000)
                     warnings.Add(
                         $"_BaseColor alpha is {bc.a:F2} but renderQueue is {rq} (Opaque range). " +
-                        "Transparent material on an opaque queue → sorting bugs. Move to queue 3000+ (Transparent).");
+                        "Transparent material on an opaque queue > sorting bugs. Move to queue 3000+ (Transparent).");
             }
             if (shader.name.IndexOf("Error", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 shader.name.IndexOf("Hidden/InternalErrorShader", StringComparison.Ordinal) >= 0)
