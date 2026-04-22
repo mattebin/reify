@@ -17,7 +17,7 @@ and `scene-list` remain the cheapest baseline smoke tests.
 Add to the Unity project's `Packages/manifest.json`:
 
 ```json
-"com.reify.unity": "file:C:/Users/Matte/Desktop/Claude Brain/reify/src/Editor",
+"com.reify.unity": "file:<PATH_TO_REIFY>/src/Editor",
 "com.unity.nuget.newtonsoft-json": "3.2.1"
 ```
 

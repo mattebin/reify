@@ -49,6 +49,56 @@ SUBMITTED = ROOT / "reports" / "llm-issues" / "submitted"
 DISMISSED = ROOT / "reports" / "llm-issues" / "dismissed"
 
 
+def detect_repo_from_origin() -> str | None:
+    """Return 'owner/name' from the reify repo's origin remote.
+
+    Fork users: their origin points to their fork, so their LLM-reported
+    issues file into their own tracker by default — not upstream.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(ROOT), "remote", "get-url", "origin"],
+            capture_output=True, text=True, check=False, timeout=5,
+        )
+        if out.returncode != 0:
+            return None
+        url = out.stdout.strip()
+        # Handle https://github.com/owner/repo.git and git@github.com:owner/repo.git
+        if url.startswith("git@"):
+            _, _, tail = url.partition(":")
+        else:
+            tail = url.split("github.com/", 1)[-1]
+        owner_repo = tail.removesuffix(".git").strip("/")
+        if "/" not in owner_repo:
+            return None
+        return owner_repo
+    except Exception:
+        return None
+
+
+def current_gh_user() -> str | None:
+    """Whoever `gh` will authenticate as on this machine, sans GITHUB_TOKEN.
+
+    Using GITHUB_TOKEN here would mask the keyring token that actually
+    has repo-write scope in our setup. Same trick as file_to_github().
+    """
+    env = os.environ.copy()
+    env.pop("GITHUB_TOKEN", None)
+    try:
+        out = subprocess.run(
+            ["gh", "api", "user", "--jq", ".login"],
+            capture_output=True, text=True, env=env, check=False, timeout=5,
+        )
+        if out.returncode != 0:
+            return None
+        login = out.stdout.strip()
+        return login or None
+    except FileNotFoundError:
+        return None
+    except Exception:
+        return None
+
+
 def parse_frontmatter(text: str) -> tuple[dict, str]:
     """Minimal YAML frontmatter parser — no dependencies needed."""
     if not text.startswith("---"):
@@ -83,6 +133,52 @@ def ensure_dirs() -> None:
     DISMISSED.mkdir(parents=True, exist_ok=True)
 
 
+LABEL_COLORS = {
+    "llm-reported":    ("0E8A16", "Filed via reify-log-issue"),
+    "severity:info":   ("C5DEF5", "info severity"),
+    "severity:warn":   ("FBCA04", "warn severity"),
+    "severity:error":  ("D93F0B", "error severity"),
+    "severity:critical": ("B60205", "critical severity"),
+    "effort:S":        ("BFDADC", "small fix"),
+    "effort:M":        ("C2E0C6", "medium fix"),
+    "effort:L":        ("5319E7", "large fix"),
+}
+
+
+def ensure_labels_exist(repo: str, labels: list[str]) -> list[str]:
+    """Create labels in the target repo if they don't exist yet. Returns
+    the filtered label list (drops labels whose creation failed).
+
+    Labels like `reporter:<model>` are created dynamically on first use
+    so each new LLM gets its own filter bucket without prep work.
+    """
+    env = os.environ.copy()
+    env.pop("GITHUB_TOKEN", None)
+    kept = []
+    for label in labels:
+        # Pick a deterministic colour + description for known labels,
+        # generic ones for dynamic labels like reporter:*.
+        if label in LABEL_COLORS:
+            color, desc = LABEL_COLORS[label]
+        elif label.startswith("reporter:"):
+            color, desc = "B4A7E5", f"Issues reported by {label.split(':',1)[1]}"
+        else:
+            color, desc = "CCCCCC", ""
+        try:
+            subprocess.run(
+                ["gh", "label", "create", label,
+                 "--color", color, "--description", desc,
+                 "--repo", repo, "--force"],
+                capture_output=True, text=True, env=env, check=False, timeout=10,
+            )
+            # --force makes it idempotent (create-or-update); assume success.
+            kept.append(label)
+        except Exception:
+            # Drop the label rather than fail the whole issue filing.
+            pass
+    return kept
+
+
 def file_to_github(path: Path, repo: str, dry_run: bool) -> str | None:
     """Return the issue URL on success, None on failure or dry-run."""
     text = path.read_text(encoding="utf-8")
@@ -98,6 +194,11 @@ def file_to_github(path: Path, repo: str, dry_run: bool) -> str | None:
     model = fm.get("model_name")
     if model:
         labels.append(f"reporter:{model.replace(' ', '-')}")
+
+    # Ensure all labels exist on the repo (idempotent) so first-use filings
+    # don't fail on missing dynamic labels like `reporter:<model>`.
+    if not dry_run:
+        labels = ensure_labels_exist(repo, labels)
 
     full_body = body
     if fm:
@@ -158,11 +259,41 @@ def prompt_choice() -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--repo", default="mattebin/reify",
-                    help="GitHub repo to file to (owner/name). Default: mattebin/reify")
+    ap.add_argument("--repo", default=None,
+                    help="GitHub repo to file to (owner/name). Defaults to "
+                         "the origin remote of this reify checkout.")
     ap.add_argument("--dry-run", action="store_true",
                     help="Do everything except actually call `gh issue create`.")
+    ap.add_argument("--yes-i-know-filing-identity", action="store_true",
+                    help="Skip the one-time identity confirmation. For CI only.")
     args = ap.parse_args()
+
+    # --- Target repo: prefer explicit flag, fall back to origin autodetect ---
+    target_repo = args.repo or detect_repo_from_origin()
+    if not target_repo:
+        print("ERROR: could not determine a target repo.")
+        print("  Either pass --repo owner/name, or make sure this checkout has a")
+        print("  github.com origin remote.")
+        return 2
+
+    # --- Identity gate: show who this will post as BEFORE showing any report ---
+    gh_user = current_gh_user()
+    if not gh_user and not args.dry_run:
+        print("ERROR: `gh` is not authenticated.")
+        print("  Run `gh auth login` first, or pass --dry-run to preview without filing.")
+        return 2
+
+    print("=" * 72)
+    print(f"  Filing target:  {target_repo}")
+    print(f"  Filing as:      {gh_user or '(unauthenticated — dry-run only)'}")
+    print(f"  Dry run:        {args.dry_run}")
+    print("=" * 72)
+    if not args.yes_i_know_filing_identity and not args.dry_run:
+        confirm = input(f"  Proceed filing to {target_repo} as {gh_user}? [y/N] ").strip().lower()
+        if confirm != "y":
+            print("  Aborted.")
+            return 0
+    print()
 
     ensure_dirs()
     reports = sorted(PENDING.glob("*.md"))
@@ -180,7 +311,7 @@ def main() -> int:
             print("Stopping.")
             break
         elif choice == "y":
-            url = file_to_github(path, args.repo, args.dry_run)
+            url = file_to_github(path, target_repo, args.dry_run)
             if url or args.dry_run:
                 dest = SUBMITTED / path.name
                 shutil.move(path, dest)
