@@ -86,7 +86,6 @@ namespace Reify.Editor.Tools
 
                 // Track what actually changed so the receipt is honest.
                 var applied = new List<object>();
-                object Before(string f) => BeforeValue(go, f);
 
                 if (newName != null && newName != go.name)
                 {
@@ -197,9 +196,5 @@ namespace Reify.Editor.Tools
         }
 
         private static object V3(Vector3 v) => new { x = v.x, y = v.y, z = v.z };
-
-        // Placeholder for cases where we need a "before" block but haven't
-        // read it yet. Currently unused.
-        private static object BeforeValue(GameObject go, string field) => null;
     }
 }

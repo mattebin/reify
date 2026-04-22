@@ -177,9 +177,17 @@ namespace Reify.Editor.Tools
         private static Dictionary<string, PackageManagerPackageInfo> InstalledPackagesByName()
         {
             var map = new Dictionary<string, PackageManagerPackageInfo>(StringComparer.OrdinalIgnoreCase);
+            // GetAllRegisteredPackages can return null before the first
+            // package-manager registration pass completes — the symptom was
+            // a raw "Object reference not set to an instance of an object"
+            // from package-search.
             var installed = PackageManagerPackageInfo.GetAllRegisteredPackages();
+            if (installed == null) return map;
             foreach (var package in installed)
+            {
+                if (package == null || string.IsNullOrEmpty(package.name)) continue;
                 map[package.name] = package;
+            }
             return map;
         }
 
