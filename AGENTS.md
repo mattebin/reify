@@ -29,6 +29,16 @@ Unity backend, not as a screenshot-first Unity assistant.
    - `primitive-defaults`
    - `spatial-primitive-evidence`
    - `spatial-anchor-distance`
+   - See [ADR-003](docs/decisions/ADR-003-spatial-claims.md) — spatial
+     claims are normatively required to carry anchor-based proof.
+   - See [docs/AGENT_TRAPS.md](docs/AGENT_TRAPS.md) for the observed
+     failure modes (anchor convention, rotation asymmetry, etc.) and
+     one-line heuristics for each.
+12. If a tool behaves unexpectedly or you suspect a reify bug, use
+    `reify-log-issue` to write a structured report under
+    `reports/llm-issues/`. The user reviews pending reports and chooses
+    which to file as GitHub issues via `python scripts/review-llm-issues.py`.
+    Do not open GitHub issues directly.
 
 ## Evidence rules
 

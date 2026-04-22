@@ -36,6 +36,13 @@ Every new tool ships at minimum:
    domain-specific evidence (`guids_touched[]` for asset writes,
    `mesh_bounds` + `primitive_defaults` for primitive creates, etc.).
    Silent no-ops and rubber-stamp receipts are rejected in review.
+7. For spatial/geometric claims: anchor-based proof per
+   [`ADR-003`](docs/decisions/ADR-003-spatial-claims.md). Connection,
+   containment, alignment and total-dimension claims must carry
+   `spatial-anchor-distance` or `spatial-primitive-evidence` output in
+   the transcript. Visual-agreement claims are rejected in review.
+   See [`docs/AGENT_TRAPS.md`](docs/AGENT_TRAPS.md) for the common
+   failure modes + heuristics.
 
 ## Repo layout
 
