@@ -41,11 +41,23 @@ namespace Reify.Editor.Tools
                     path        = GameObjectResolver.PathOf(go)
                 };
 
+                // Pre-destroy descendant count for the receipt.
+                var beforeDescendants = 0;
+                foreach (var _t in go.GetComponentsInChildren<Transform>(true)) beforeDescendants++;
+
                 Undo.DestroyObjectImmediate(go);
 
                 return new
                 {
                     destroyed   = snapshot,
+                    applied_fields = new object[]
+                    {
+                        new { field = "gameobject_exists", path = snapshot.path,
+                              before = true, after = false },
+                        new { field = "descendant_transform_count",
+                              before = beforeDescendants, after = 0 }
+                    },
+                    applied_count = 2,
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame       = (long)Time.frameCount
                 };

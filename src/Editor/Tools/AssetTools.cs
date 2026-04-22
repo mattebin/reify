@@ -359,6 +359,55 @@ namespace Reify.Editor.Tools
             });
         }
 
+        // ---------- asset-refresh-job ----------
+        // Full-project reimport can take minutes. This job variant queues
+        // it, returns a job_id, and callers poll job-status. Scoped
+        // asset-refresh (with `path`) is usually fast enough for the
+        // sync variant and keeps that shape unchanged.
+        [ReifyTool("asset-refresh-job")]
+        public static Task<object> RefreshJob(JToken args)
+        {
+            var path        = args?.Value<string>("path");
+            var forceUpdate = args?.Value<bool?>("force_update") ?? false;
+
+            return MainThreadDispatcher.RunAsync<object>(() =>
+            {
+                var job = ReifyJobs.Start("asset-refresh");
+                ReifyJobs.SetRunning(job, "refresh queued", 0f);
+
+                EditorApplication.delayCall += () =>
+                {
+                    try
+                    {
+                        ReifyJobs.SetRunning(job, "AssetDatabase.Refresh running", -1f);
+                        var options = forceUpdate ? ImportAssetOptions.ForceUpdate : ImportAssetOptions.Default;
+                        if (!string.IsNullOrEmpty(path))
+                        {
+                            AssetDatabase.ImportAsset(path, options);
+                            AssetDatabase.Refresh(options);
+                        }
+                        else
+                        {
+                            AssetDatabase.Refresh(options);
+                        }
+                        ReifyJobs.Succeed(job, new { scope = path != null ? "asset" : "project", path, force_update = forceUpdate });
+                    }
+                    catch (Exception ex)
+                    {
+                        ReifyJobs.Fail(job, $"{ex.GetType().Name}: {ex.Message}");
+                    }
+                };
+
+                return new
+                {
+                    job         = ReifyJobs.Serialize(job, includeResult: false, includeEvents: false),
+                    note        = "Refresh queued. Poll job-status / job-result.",
+                    read_at_utc = DateTime.UtcNow.ToString("o"),
+                    frame       = (long)Time.frameCount
+                };
+            });
+        }
+
         // ---------- asset-refresh ----------
         [ReifyTool("asset-refresh")]
         public static Task<object> Refresh(JToken args)
