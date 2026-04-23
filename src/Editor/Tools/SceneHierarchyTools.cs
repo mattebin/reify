@@ -63,6 +63,13 @@ namespace Reify.Editor.Tools
             var scenePath       = args?.Value<string>("scene_path");
             var componentType   = args?.Value<string>("component_type");
             var namePattern     = args?.Value<string>("name_pattern");
+            // name_contains is the friendlier plain-substring alias. Escape +
+            // case-insensitive; no regex surprises. Rejects co-use with
+            // name_pattern so the caller can't silently get AND-of-both.
+            var nameContains    = args?.Value<string>("name_contains");
+            if (!string.IsNullOrEmpty(nameContains) && !string.IsNullOrEmpty(namePattern))
+                throw new ArgumentException(
+                    "Pass either name_pattern (regex) or name_contains (plain substring), not both.");
             var tag             = args?.Value<string>("tag");
             var layer           = args?["layer"]?.Type == JTokenType.Integer
                 ? args.Value<int?>("layer") : null;
@@ -78,6 +85,12 @@ namespace Reify.Editor.Tools
                 {
                     throw new ArgumentException($"name_pattern is not a valid regex: {ex.Message}");
                 }
+            }
+            else if (!string.IsNullOrEmpty(nameContains))
+            {
+                // Substring match, case-insensitive. Escaped so "." etc. behave
+                // as literal characters for the caller.
+                rx = new Regex(Regex.Escape(nameContains), RegexOptions.IgnoreCase);
             }
 
             return MainThreadDispatcher.RunAsync<object>(() =>
@@ -109,7 +122,7 @@ namespace Reify.Editor.Tools
                 return new
                 {
                     scene_paths = PathsOf(scenes),
-                    query = new { component_type = componentType, name_pattern = namePattern, tag, layer, active, limit },
+                    query = new { component_type = componentType, name_pattern = namePattern, name_contains = nameContains, tag, layer, active, limit },
                     scanned,
                     match_count = matches.Count,
                     truncated,
