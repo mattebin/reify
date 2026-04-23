@@ -4,6 +4,20 @@ All notable changes to reify are documented here. Ordering follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows
 [Semantic Versioning](https://semver.org/) once the public API stabilises.
 
+## [0.2.1] — 2026-04-23
+
+### Changed
+- `package.json` minimum Unity bumped `2021.3` → `6000.0`. The declared
+  minimum now matches what we actually validate against (Unity 6000.4.3f1).
+  Earlier Unity versions may still work but are not tested and would be
+  a dishonest compatibility claim per reify's own "no unverified
+  assertions" stance.
+
+### Notes
+- No tool surface changes. This release exists purely to correct the
+  Unity compatibility declaration in the UPM manifest so OpenUPM and
+  Unity Package Manager both report accurate requirements.
+
 ## [Unreleased]
 
 ### Added

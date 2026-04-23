@@ -78,7 +78,7 @@ dotnet build src/Server/Reify.Server.csproj -c Release
 ## Dependencies
 
 - `com.unity.nuget.newtonsoft-json` 3.2.1 (required)
-- Unity 2021.3+ (Unity 6000.4 known-good)
+- Unity 6000.0+ (validated on 6000.4.3f1)
 - `com.unity.inputsystem` optional - enables `input-actions-asset-inspect`,
   `input-player-input-inspect`, `input-devices` via reflection
 - `com.unity.ai.navigation` optional - enables full NavMesh features
