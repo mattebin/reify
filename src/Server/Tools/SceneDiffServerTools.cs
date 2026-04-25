@@ -23,10 +23,11 @@ public static class SceneDiffServerTools
         bool? all_loaded_scenes = null,
         bool? include_components = null,
         bool? include_transform = null,
+        string? component_encoding = null,
         CancellationToken ct = default
     ) => await unity.CallAsync<JsonElement>("scene-snapshot", new
     {
-        all_loaded_scenes, include_components, include_transform
+        all_loaded_scenes, include_components, include_transform, component_encoding
     }, ct);
 
     [McpServerTool(Name = "scene-diff"), Description(

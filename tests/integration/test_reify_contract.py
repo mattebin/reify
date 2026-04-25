@@ -339,6 +339,28 @@ def test_scene_diff_roundtrip_noop():
     assert d["changed_count"] == 0, d
 
 
+def test_scene_snapshot_compact_component_ids_diff_noop():
+    """Compact component ids keep large scene snapshots diffable."""
+    before = ok(call("scene-snapshot", {
+        "include_components": True,
+        "include_transform": False,
+        "component_encoding": "ids",
+    }))
+    assert before["component_encoding"] == "ids"
+    assert "component_type_table" in before
+    assert before["component_type_table_count"] == len(before["component_type_table"])
+    if before["gameobject_count"] > 0:
+        assert "component_type_ids" in before["gameobjects"][0]
+
+    d = ok(call("scene-diff", {
+        "before_snapshot": before,
+        "include_components": True,
+    }))
+    assert d["added_count"] == 0, d
+    assert d["removed_count"] == 0, d
+    assert d["changed_count"] == 0, d
+
+
 def test_write_roundtrip_create_diff_destroy():
     """Full verifiable-write cycle with self-proving receipts."""
     name = f"_test_{int(time.time() * 1000)}"

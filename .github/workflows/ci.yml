@@ -19,6 +19,9 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Tool parity
+        run: python3 tests/static/test_tool_parity.py
+
       - name: Restore
         working-directory: src
         run: dotnet restore
