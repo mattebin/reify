@@ -24,10 +24,17 @@ public static class SceneDiffServerTools
         bool? include_components = null,
         bool? include_transform = null,
         string? component_encoding = null,
+        int? cursor = null,
+        int? page_size = null,
         CancellationToken ct = default
     ) => await unity.CallAsync<JsonElement>("scene-snapshot", new
     {
-        all_loaded_scenes, include_components, include_transform, component_encoding
+        all_loaded_scenes,
+        include_components,
+        include_transform,
+        component_encoding,
+        cursor,
+        page_size
     }, ct);
 
     [McpServerTool(Name = "scene-diff"), Description(
@@ -50,9 +57,10 @@ public static class SceneDiffServerTools
         JsonElement before_snapshot,
         bool? all_loaded_scenes = null,
         bool? include_components = null,
+        bool? allow_partial = null,
         CancellationToken ct = default
     ) => await unity.CallAsync<JsonElement>("scene-diff", new
     {
-        before_snapshot, all_loaded_scenes, include_components
+        before_snapshot, all_loaded_scenes, include_components, allow_partial
     }, ct);
 }

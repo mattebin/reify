@@ -33,3 +33,6 @@ jobs:
       - name: Ensure server binary emitted
         working-directory: src
         run: test -f Server/bin/Release/net8.0/reify-server.dll
+
+      - name: MCP stdio bootstrap
+        run: python3 tests/static/test_mcp_stdio_bootstrap.py

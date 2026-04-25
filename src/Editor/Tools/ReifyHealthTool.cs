@@ -68,6 +68,8 @@ namespace Reify.Editor.Tools
                 catch { /* tolerate reflection misses */ }
 
                 var uptime = (DateTime.UtcNow - BridgeStartUtc);
+                var bridgePort = ResolveBridgePort();
+                var maxResponseBytes = ResolveMaxResponseBytes();
 
                 return new
                 {
@@ -82,7 +84,11 @@ namespace Reify.Editor.Tools
                     error_count_in_console = errorCount,
                     warning_count_in_console = warningCount,
                     bridge_uptime_seconds = (long)uptime.TotalSeconds,
+                    bridge_url            = $"http://127.0.0.1:{bridgePort}/",
+                    bridge_port           = bridgePort,
+                    max_response_bytes    = maxResponseBytes,
                     process_id            = Process.GetCurrentProcess().Id,
+                    process_name          = Process.GetCurrentProcess().ProcessName,
                     unity_version         = Application.unityVersion,
                     project_path          = System.IO.Path.GetFullPath(System.IO.Directory.GetCurrentDirectory()),
                     has_focus             = UnityEditorInternal.InternalEditorUtility.isApplicationActive,
@@ -90,6 +96,18 @@ namespace Reify.Editor.Tools
                     frame                 = (long)Time.frameCount
                 };
             });
+        }
+
+        private static int ResolveBridgePort()
+        {
+            var fromEnv = Environment.GetEnvironmentVariable("REIFY_BRIDGE_PORT");
+            return int.TryParse(fromEnv, out var parsed) && parsed > 0 ? parsed : 17777;
+        }
+
+        private static int ResolveMaxResponseBytes()
+        {
+            var fromEnv = Environment.GetEnvironmentVariable("REIFY_MAX_RESPONSE_BYTES");
+            return int.TryParse(fromEnv, out var parsed) && parsed > 16384 ? parsed : 786432;
         }
     }
 }

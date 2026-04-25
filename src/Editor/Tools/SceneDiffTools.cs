@@ -26,21 +26,34 @@ namespace Reify.Editor.Tools
             var includeComponents = args?.Value<bool?>("include_components") ?? true;
             var includeTransform = args?.Value<bool?>("include_transform") ?? true;
             var requestedEncoding = (args?.Value<string>("component_encoding") ?? "auto").ToLowerInvariant();
+            var cursor = Math.Max(0, args?.Value<int?>("cursor") ?? 0);
+            var requestedPageSize = args?.Value<int?>("page_size");
 
             if (requestedEncoding != "auto" && requestedEncoding != "names" && requestedEncoding != "ids")
                 throw new ArgumentException("component_encoding must be one of: auto, names, ids.");
+            if (requestedPageSize.HasValue && requestedPageSize.Value <= 0)
+                throw new ArgumentException("page_size must be a positive integer when provided.");
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
                 var scenes = ResolveScenes(allLoaded);
                 var targets = CollectTargets(scenes);
+                var totalCount = targets.Count;
+                var pageSize = requestedPageSize.HasValue
+                    ? Math.Min(requestedPageSize.Value, 10000)
+                    : Math.Max(0, totalCount - cursor);
+                var end = Math.Min(cursor + pageSize, totalCount);
+                var pageTargets = cursor < totalCount
+                    ? targets.GetRange(cursor, end - cursor)
+                    : new List<(GameObject go, Scene scene)>();
+                var nextCursor = end < totalCount ? (int?)end : null;
                 var useIds = includeComponents &&
                     (requestedEncoding == "ids" ||
-                     (requestedEncoding == "auto" && targets.Count >= AutoComponentIdThreshold));
+                     (requestedEncoding == "auto" && totalCount >= AutoComponentIdThreshold));
                 var componentTable = useIds ? new ComponentTypeTable() : null;
 
-                var gos = new List<object>(targets.Count);
-                foreach (var target in targets)
+                var gos = new List<object>(pageTargets.Count);
+                foreach (var target in pageTargets)
                 {
                     gos.Add(SnapshotGameObject(
                         target.go,
@@ -60,7 +73,13 @@ namespace Reify.Editor.Tools
                     component_encoding = includeComponents ? (useIds ? "ids" : "names") : "none",
                     component_type_table = useIds ? componentTable.Names : null,
                     component_type_table_count = useIds ? componentTable.Count : 0,
-                    gameobject_count = gos.Count,
+                    gameobject_count = totalCount,
+                    total_gameobject_count = totalCount,
+                    returned_count = gos.Count,
+                    cursor,
+                    page_size = pageSize,
+                    next_cursor = nextCursor,
+                    is_complete_snapshot = nextCursor == null && cursor == 0,
                     gameobjects = gos.ToArray(),
                     read_at_utc = DateTime.UtcNow.ToString("o"),
                     frame = (long)Time.frameCount
@@ -76,12 +95,18 @@ namespace Reify.Editor.Tools
 
             var allLoaded = args?.Value<bool?>("all_loaded_scenes") ?? false;
             var includeComponents = args?.Value<bool?>("include_components") ?? true;
+            var allowPartial = args?.Value<bool?>("allow_partial") ?? false;
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
                 var beforeGos = before["gameobjects"] as JArray
                     ?? throw new ArgumentException("before_snapshot.gameobjects is missing or not an array.");
                 var beforeComponentTable = before["component_type_table"] as JArray;
+                var beforeIsComplete = before.Value<bool?>("is_complete_snapshot") ?? true;
+                if (!beforeIsComplete && !allowPartial)
+                    throw new ArgumentException(
+                        "before_snapshot is paginated/partial. Re-run scene-snapshot without page_size, " +
+                        "collect all pages, or pass allow_partial=true to diff only the included paths.");
 
                 var beforeByPath = new Dictionary<string, JObject>();
                 foreach (var g in beforeGos.OfType<JObject>())
@@ -111,7 +136,7 @@ namespace Reify.Editor.Tools
                 {
                     if (!beforeByPath.ContainsKey(kvp.Key))
                     {
-                        added.Add(kvp.Value);
+                        if (beforeIsComplete) added.Add(kvp.Value);
                         continue;
                     }
 

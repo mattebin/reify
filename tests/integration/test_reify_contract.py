@@ -361,6 +361,22 @@ def test_scene_snapshot_compact_component_ids_diff_noop():
     assert d["changed_count"] == 0, d
 
 
+def test_scene_snapshot_pagination_is_explicit_and_safe():
+    """Paged scene snapshots advertise partial state and do not diff silently."""
+    before = ok(call("scene-snapshot", {
+        "include_components": False,
+        "include_transform": False,
+        "cursor": 0,
+        "page_size": 1,
+    }))
+    assert before["returned_count"] <= 1
+    assert before["gameobject_count"] == before["total_gameobject_count"]
+    assert "next_cursor" in before
+    if before["next_cursor"] is not None:
+        assert before["is_complete_snapshot"] is False
+        err(call("scene-diff", {"before_snapshot": before}), "INVALID_ARGS")
+
+
 def test_write_roundtrip_create_diff_destroy():
     """Full verifiable-write cycle with self-proving receipts."""
     name = f"_test_{int(time.time() * 1000)}"
