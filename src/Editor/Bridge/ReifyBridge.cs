@@ -36,9 +36,49 @@ namespace Reify.Editor.Bridge
             EditorApplication.quitting += Stop;
             AssemblyReloadEvents.beforeAssemblyReload += Stop;
 
+            // Auxiliary Unity processes (asset import workers, build batch
+            // processes, ParrelSync clones running headless) also load editor
+            // assemblies. Without this guard each one tries to bind 17777 and
+            // either steals the port from the foreground editor or leaves the
+            // socket in a half-bound state — both observed in the field. Tool
+            // registration still happens so introspection within the worker
+            // works, but no listener is started.
+            if (!IsHostEditorProcess())
+                return;
+
             AutoRegister();
 
             Start();
+        }
+
+        /// <summary>
+        /// Heuristic for "is this the user-facing Unity Editor, vs an
+        /// auxiliary worker?". A real editor is non-batch and never carries
+        /// the import-worker / build-machine command-line markers.
+        /// </summary>
+        private static bool IsHostEditorProcess()
+        {
+            if (Application.isBatchMode) return false;
+
+            string[] args;
+            try { args = Environment.GetCommandLineArgs() ?? Array.Empty<string>(); }
+            catch { return true; } // err on the side of starting
+
+            foreach (var raw in args)
+            {
+                if (string.IsNullOrEmpty(raw)) continue;
+                var a = raw.ToLowerInvariant();
+                // Asset Import Worker, AssetGraph worker, build/test workers,
+                // ParrelSync clones launched with -nographics, etc.
+                if (a.Contains("importworker"))     return false;
+                if (a.Contains("assetimport"))      return false;
+                if (a.Contains("buildmachine"))     return false;
+                if (a == "-batchmode")              return false;
+                if (a == "-quit")                   return false;
+                if (a == "-nographics")             return false;
+                if (a == "-runtests")               return false;
+            }
+            return true;
         }
 
         /// <summary>
