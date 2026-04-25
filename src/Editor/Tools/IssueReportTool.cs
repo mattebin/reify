@@ -22,6 +22,7 @@ namespace Reify.Editor.Tools
         private const string PendingDir = "reports/llm-issues/pending";
         private static readonly string[] ValidEffort   = { "S", "M", "L" };
         private static readonly string[] ValidSeverity = { "info", "warn", "error", "critical" };
+        private static readonly string[] ValidRecommendation = { "send", "do_not_send", "unsure" };
 
         [ReifyTool("reify-log-issue")]
         public static Task<object> Log(JToken args)
@@ -49,6 +50,11 @@ namespace Reify.Editor.Tools
             var logs              = args?.Value<string>("logs");
             var suggestedFix      = args?.Value<string>("suggested_fix");
             var reifyCommit       = args?.Value<string>("reify_commit");
+            var aiRecommendation  = (args?.Value<string>("ai_recommendation") ?? "unsure").Trim().ToLowerInvariant();
+            if (!ValidRecommendation.Contains(aiRecommendation))
+                throw new ArgumentException(
+                    $"ai_recommendation must be one of send/do_not_send/unsure, got '{aiRecommendation}'.");
+            var aiReason          = args?.Value<string>("ai_reason");
 
             return MainThreadDispatcher.RunAsync<object>(() =>
             {
@@ -76,6 +82,9 @@ namespace Reify.Editor.Tools
                 sb.AppendLine($"severity:          \"{severity}\"");
                 if (!string.IsNullOrEmpty(affectedTool))
                     sb.AppendLine($"affected_tool:     \"{EscapeYaml(affectedTool)}\"");
+                sb.AppendLine($"ai_recommendation: \"{aiRecommendation}\"");
+                if (!string.IsNullOrEmpty(aiReason))
+                    sb.AppendLine($"ai_reason:         \"{EscapeYaml(aiReason)}\"");
                 sb.AppendLine($"unity_version:     \"{Application.unityVersion}\"");
                 sb.AppendLine($"platform:          \"{Application.platform}\"");
                 sb.AppendLine($"reify_tool_count:  {CountReifyTools()}");

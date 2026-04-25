@@ -6,6 +6,16 @@ All notable changes to reify are documented here. Ordering follows
 
 ## [Unreleased]
 
+### Added
+- Native Unity Command Center EditorWindow for bridge health, tool
+  inventory, MCP config snippets, evidence discipline reminders, and
+  human-gated review/submission of LLM-reported issues.
+- `reify-command-center-open` for opening the dashboard from any MCP
+  client.
+
+### Changed
+- Tool surface is now 259 tools.
+
 ## [0.3.0] - 2026-04-25
 
 ### Added

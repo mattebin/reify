@@ -2,7 +2,7 @@
 
 > Structured state for Unity, for LLMs that reason.
 
-Editor-side HTTP bridge for the Reify MCP server. 258 tools that expose
+Editor-side HTTP bridge for the Reify MCP server. 259 tools that expose
 Unity Editor state and operations as machine-readable JSON with
 philosophy-layer warnings, Undo-backed writes, spatial anchor proofs,
 and ambiguity rejection on path lookups. Call `reify-tool-list` for the
@@ -51,6 +51,9 @@ After Unity recompiles the package, the Console should show:
 ```
 [Reify] Bridge listening on http://127.0.0.1:17777/
 ```
+
+Open the human dashboard with `Window > Reify > Command Center` or
+`Tools > Reify > Command Center`.
 
 Direct probe (PowerShell):
 

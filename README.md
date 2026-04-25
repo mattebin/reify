@@ -1,6 +1,6 @@
 # reify
 
-**Unity Editor MCP server for LLMs that need checkable evidence instead of screenshots.** 258 tools returning structured JSON — so an agent can diff, grep, and verify what it just did, and a human reviewer can reject writes that don't prove themselves.
+**Unity Editor MCP server for LLMs that need checkable evidence instead of screenshots.** 259 tools returning structured JSON — so an agent can diff, grep, and verify what it just did, and a human reviewer can reject writes that don't prove themselves.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Unity](https://img.shields.io/badge/Unity-6000.4%2B-black?logo=unity)](https://unity.com/releases/editor/archive)
@@ -108,7 +108,7 @@ From any MCP client connected to reify:
 ping                → { status: ok, unity_version: 6000.4.3f1, ... }
 reify-orient        → full orientation dump (thesis + loop + reading list)
 reify-self-check    → contract test battery, expect fail_count: 0
-reify-tool-list     → live inventory of all 258 tools
+reify-tool-list     → live inventory of all 259 tools
 ```
 
 If `ping` fails, the Unity Editor side isn't running yet. Open your project; wait for the bridge log line.
@@ -119,7 +119,7 @@ Call `reify-tool-list` for the live list. A sampling:
 
 | Category | Tools |
 |---|---|
-| **Meta / orientation** | `reify-orient`, `reify-self-check`, `reify-tool-list`, `reify-version`, `ping`, `domain-reload-status` |
+| **Meta / orientation** | `reify-orient`, `reify-self-check`, `reify-tool-list`, `reify-version`, `reify-command-center-open`, `ping`, `domain-reload-status` |
 | **Scene + GameObjects** | `scene-snapshot`, `scene-diff`, `scene-query`, `gameobject-create`, `gameobject-modify`, `gameobject-find`, `gameobject-duplicate`, `component-add`, `component-get`, `component-set-property`, `component-remove` |
 | **Spatial proofs** | `primitive-defaults`, `spatial-primitive-evidence`, `spatial-anchor-distance`, `geometry-line-primitive`, `mesh-native-bounds` |
 | **Assets + prefabs** | `asset-snapshot`, `asset-diff`, `asset-create`, `asset-move`, `asset-rename`, `asset-delete`, `asset-copy`, `asset-shader-list-all`, `prefab-create`, `prefab-save`, `material-inspect` |
@@ -133,7 +133,7 @@ Call `reify-tool-list` for the live list. A sampling:
 
 ## LLM-reported issues (optional)
 
-Reify includes an issue-reporting loop for when an LLM hits a reify bug and wants the maintainer to know. **Completely optional** — skip this section if you don't care.
+Reify includes an issue-reporting loop for when an LLM hits a reify bug and wants the maintainer to know. **Completely optional** — skip this section if you don't care. Users can review reports from `Window > Reify > Command Center` inside Unity or with the CLI script below.
 
 ### How it works
 ```

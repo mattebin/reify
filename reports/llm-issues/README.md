@@ -71,6 +71,16 @@ Optional but encouraged:
 - `reproduction_steps` — numbered list
 - `logs` — raw tool output
 - `suggested_fix` — LLM's theory, will be editorialised by the user before submission
+- `ai_recommendation` — `send`, `do_not_send`, or `unsure`; advisory only
+- `ai_reason` — why the LLM thinks the report should or should not be sent
+
+## Unity Command Center
+
+The same local review gate is available inside Unity at
+`Window > Reify > Command Center`. It shows pending/submitted/dismissed
+reports, the LLM's recommendation, and safe actions. GitHub submission
+still requires an explicit human confirmation before any `gh issue create`
+call is made.
 
 ## For humans filing a report manually
 

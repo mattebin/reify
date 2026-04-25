@@ -43,6 +43,13 @@ public static class MetaBatchServerTools
     public static async Task<JsonElement> ReifyVersion(UnityClient unity, CancellationToken ct = default
     ) => await unity.CallAsync<JsonElement>("reify-version", null, ct);
 
+    [McpServerTool(Name = "reify-command-center-open"), Description(
+        "Open the native Unity EditorWindow dashboard at Window/Reify/Command Center. " +
+        "Useful when the user wants to inspect bridge health, tool inventory, config snippets, " +
+        "and pending LLM issue reports from inside Unity.")]
+    public static async Task<JsonElement> ReifyCommandCenterOpen(UnityClient unity, CancellationToken ct = default
+    ) => await unity.CallAsync<JsonElement>("reify-command-center-open", null, ct);
+
     [McpServerTool(Name = "reflection-method-find"), Description(
         "Enumerate methods on a .NET type for reflection-driven discovery. " +
         "Args: type_name (FQN), optional method_name (exact) or name_like " +

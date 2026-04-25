@@ -4,6 +4,8 @@ model_name:        "<e.g. claude-sonnet-4.5 or gpt-5-codex>"
 effort:            "S"            # S / M / L
 severity:          "warn"          # info / warn / error / critical
 affected_tool:     "<reify tool name, if any>"
+ai_recommendation: "unsure"        # send / do_not_send / unsure
+ai_reason:         "<why the AI thinks this should or should not be sent>"
 unity_version:     "<autofilled by reify-log-issue>"
 platform:          "<autofilled>"
 reify_tool_count:  0                # autofilled

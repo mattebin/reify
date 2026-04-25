@@ -204,6 +204,7 @@ def file_to_github(path: Path, repo: str, dry_run: bool) -> str | None:
     if fm:
         metadata_lines = []
         for k in ("model_name", "effort", "severity", "affected_tool",
+                  "ai_recommendation", "ai_reason",
                   "unity_version", "platform", "reify_tool_count",
                   "frame_at_detection", "timestamp_utc", "reify_commit"):
             if fm.get(k):
