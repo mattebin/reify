@@ -131,6 +131,21 @@ Call `reify-tool-list` for the live list. A sampling:
 | **Remote Unity control** | `editor-request-script-compilation` (compile + domain reload without alt-tabbing), `editor-menu-execute`, `editor-selection-set` |
 | **Issue reporting** | `reify-log-issue`, `reify-list-pending-issues` (see below) |
 
+## Command Center
+
+Humans get a Unity-native dashboard at `Window > Reify > Command Center` (or `Tools > Reify`). Read-only by default, with an explicit-confirm gate before anything touches GitHub. Use it to see what's running, what tools exist, and what your LLM has been reporting — without leaving the editor.
+
+![Reify Command Center inside Unity, showing bridge health, the tool inventory grouped by domain, an LLM-reported issue with its AI recommendation, and the agent discipline checklist](docs/images/command-center.png)
+
+What's on it:
+- **Bridge state** — ready/down, URL, port, response cap, Unity version, project path, console error/warning counts
+- **Tool inventory** — all 259 tools grouped by domain, searchable, with copy buttons for individual names or full domain lists
+- **Quick actions** — copy bridge URL, copy generic MCP config, run self-check, open docs, open the reports folder
+- **LLM reports** — pending / submitted / dismissed tabs. The AI's recommendation (`send` / `do_not_send` / `unsure`) is shown but advisory; nothing reaches GitHub until a human clicks **Send to GitHub**
+- **Agent discipline** — the 5 rules an agent should follow, kept on screen so the human can verify the agent is being held to them
+
+This window is the consent gate. The bridge runs the LLM's calls; the Command Center is where a human can see everything happening and stop it.
+
 ## LLM-reported issues (optional)
 
 Reify includes an issue-reporting loop for when an LLM hits a reify bug and wants the maintainer to know. **Completely optional** — skip this section if you don't care. Users can review reports from `Window > Reify > Command Center` inside Unity or with the CLI script below.
