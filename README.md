@@ -1,15 +1,15 @@
 # reify
 
-**Unity Editor MCP server for LLMs that need checkable evidence instead of screenshots.** 230+ tools returning structured JSON — so an agent can diff, grep, and verify what it just did, and a human reviewer can reject writes that don't prove themselves.
+**Unity Editor MCP server for LLMs that need checkable evidence instead of screenshots.** 250+ tools returning structured JSON — so an agent can diff, grep, and verify what it just did, and a human reviewer can reject writes that don't prove themselves.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Unity](https://img.shields.io/badge/Unity-6000.4%2B-black?logo=unity)](https://unity.com/releases/editor/archive)
 [![MCP](https://badge.mcpx.dev?status=on 'MCP Enabled')](https://modelcontextprotocol.io/introduction)
 [![CI](https://github.com/mattebin/reify/actions/workflows/ci.yml/badge.svg)](https://github.com/mattebin/reify/actions/workflows/ci.yml)
-[![Contract tests](https://img.shields.io/badge/contract%20tests-19%2F19-brightgreen)](tests/integration/test_reify_contract.py)
-[![MCP clients](https://img.shields.io/badge/clients-Claude%20Code%20%7C%20Cursor%20%7C%20VS%20Code%20%7C%20Windsurf-6f42c1)](client-config/)
+[![Contract tests](https://img.shields.io/badge/contract%20tests-21%2F21-brightgreen)](tests/integration/test_reify_contract.py)
+[![MCP clients](https://img.shields.io/badge/clients-any%20MCP--capable%20LLM-6f42c1)](client-config/)
 
-Works with Claude Code / Claude Desktop, Cursor, VS Code MCP, and Windsurf. Live-validated against **Unity 6000.4.3f1**. Apache 2.0.
+Works with any LLM client that can launch an MCP stdio server. Claude Code / Claude Desktop, Cursor, VS Code MCP, and Windsurf configs are included as examples, not the ceiling. Live-validated against **Unity 6000.4.3f1**. Apache 2.0.
 
 ## What an LLM actually does with reify
 
@@ -91,7 +91,7 @@ Every tool call is a JSON request to `/tool` on the bridge. Every read returns e
    "com.reify.unity": "https://github.com/mattebin/reify.git?path=/src/Editor"
    ```
 4. Open your Unity project. Watch the Console for `[Reify] Bridge listening on http://127.0.0.1:17777/`.
-5. Point your MCP client at the unpacked `reify-server` binary. See `client-config/` for ready-to-go configs for [Claude Code](client-config/claude-code.mcp.json), [Cursor](client-config/cursor.mcp.json), [VS Code](client-config/vscode-mcp.json), [Windsurf](client-config/windsurf.mcp.json).
+5. Point your MCP client at the unpacked `reify-server` binary. Any MCP-capable LLM client should work; `client-config/` includes ready-to-go examples for [Claude Code](client-config/claude-code.mcp.json), [Cursor](client-config/cursor.mcp.json), [VS Code](client-config/vscode-mcp.json), and [Windsurf](client-config/windsurf.mcp.json).
 
 ### From source (you want the latest or you want to contribute)
 ```bash
@@ -108,7 +108,7 @@ From any MCP client connected to reify:
 ping                → { status: ok, unity_version: 6000.4.3f1, ... }
 reify-orient        → full orientation dump (thesis + loop + reading list)
 reify-self-check    → contract test battery, expect fail_count: 0
-reify-tool-list     → live inventory of all 230+ tools
+reify-tool-list     → live inventory of all 250+ tools
 ```
 
 If `ping` fails, the Unity Editor side isn't running yet. Open your project; wait for the bridge log line.
@@ -194,7 +194,7 @@ Total reading time: ~15 minutes. All short on purpose.
 Python contract suite against a live Unity:
 ```bash
 python tests/integration/test_reify_contract.py
-# 19 passed, 0 failed
+# 21 passed, 0 failed
 ```
 Runs ping, read-evidence shape, write-receipt shape (ADR-002), error code discrimination (`INVALID_ARGS` / `COMPONENT_NOT_FOUND` / `TOOL_EXCEPTION` / `UNKNOWN_TOOL`), spatial anchor proofs (ADR-003), and the `reify-self-check` tool. No pytest required — standalone runner.
 
