@@ -48,7 +48,7 @@ All notable changes to reify are documented here. Ordering follows
   `editor-prefs-*`, and `player-prefs-*`.
 - MCP/server parity wrappers for the remaining editor tools so the
   live editor registry and stdio server registry now expose the same
-  250+ tool surface.
+  258-tool surface.
 - `scene-snapshot` pagination via `cursor` + `page_size`, with
   explicit `is_complete_snapshot`, `returned_count`, and `next_cursor`
   metadata for large real-world scenes.

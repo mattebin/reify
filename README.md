@@ -1,6 +1,6 @@
 # reify
 
-**Unity Editor MCP server for LLMs that need checkable evidence instead of screenshots.** 250+ tools returning structured JSON — so an agent can diff, grep, and verify what it just did, and a human reviewer can reject writes that don't prove themselves.
+**Unity Editor MCP server for LLMs that need checkable evidence instead of screenshots.** 258 tools returning structured JSON — so an agent can diff, grep, and verify what it just did, and a human reviewer can reject writes that don't prove themselves.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Unity](https://img.shields.io/badge/Unity-6000.4%2B-black?logo=unity)](https://unity.com/releases/editor/archive)
@@ -108,7 +108,7 @@ From any MCP client connected to reify:
 ping                → { status: ok, unity_version: 6000.4.3f1, ... }
 reify-orient        → full orientation dump (thesis + loop + reading list)
 reify-self-check    → contract test battery, expect fail_count: 0
-reify-tool-list     → live inventory of all 250+ tools
+reify-tool-list     → live inventory of all 258 tools
 ```
 
 If `ping` fails, the Unity Editor side isn't running yet. Open your project; wait for the bridge log line.
