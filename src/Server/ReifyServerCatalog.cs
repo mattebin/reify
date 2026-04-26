@@ -57,7 +57,8 @@ internal static class ReifyServerCatalog
             {
                 unity = "Editor-only (runtime deferred)",
                 transport = "MCP stdio + localhost Unity bridge",
-                reflection_call = "opt-in via REIFY_ALLOW_REFLECTION_CALL=1"
+                reflection_call = "Unity Editor opt-in via REIFY_ALLOW_REFLECTION_CALL=1",
+                script_execute = "Unity Editor opt-in via REIFY_ALLOW_SCRIPT_EXECUTE=1"
             },
             counts = new
             {

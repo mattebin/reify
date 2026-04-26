@@ -12,9 +12,23 @@ All notable changes to reify are documented here. Ordering follows
   human-gated review/submission of LLM-reported issues.
 - `reify-command-center-open` for opening the dashboard from any MCP
   client.
+- `scripts/build-server.ps1`, `scripts/stop-reify-servers.ps1`, and
+  `scripts/reify-doctor.ps1` for safer local build/lifecycle checks while
+  MCP clients are running.
+- `scripts/install-client-config.ps1` to generate client configs from the
+  checked-in templates with `<PATH_TO_REIFY>` substituted.
 
 ### Changed
 - Tool surface is now 259 tools.
+- `script-execute` is now disabled by default and requires launching Unity
+  with `REIFY_ALLOW_SCRIPT_EXECUTE=1`, matching the explicit opt-in posture
+  of `reflection-method-call`.
+- Disabled unsafe tools now return `UNSAFE_TOOL_DISABLED` instead of a
+  generic tool exception.
+- Published client configs now target `dist/reify-server/reify-server.exe`;
+  scratch builds remain the default for validation.
+- `reify-self-check` now reports editor readiness, response cap config, and
+  unsafe-tool gate status in addition to its existing registry/write checks.
 
 ## [0.3.0] - 2026-04-25
 

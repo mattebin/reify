@@ -216,9 +216,9 @@ namespace Reify.Editor.Tools
             // Dangerous tool. Gated behind an explicit opt-in env var so the
             // default install can't accidentally run arbitrary reflection.
             if (Environment.GetEnvironmentVariable("REIFY_ALLOW_REFLECTION_CALL") != "1")
-                throw new InvalidOperationException(
+                throw new UnauthorizedAccessException(
                     "reflection-method-call is disabled. Set REIFY_ALLOW_REFLECTION_CALL=1 " +
-                    "in the reify-server's environment to enable.");
+                    "in the Unity Editor environment before launch to enable arbitrary reflection calls.");
 
             var typeName    = args?.Value<string>("type_name") ?? throw new ArgumentException("type_name required.");
             var methodName  = args?.Value<string>("method_name") ?? throw new ArgumentException("method_name required.");

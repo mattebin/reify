@@ -13,7 +13,8 @@ public static class CompletionGapServerTools
         "Compile and execute a small C# snippet in-memory through Roslyn on the Unity side. " +
         "Provide full source code that contains a parameterless static entrypoint, plus type_name " +
         "and method_name if you want names other than the defaults. Returns compile diagnostics " +
-        "and, on success, the entrypoint return value. Main-thread execution only.")]
+        "and, on success, the entrypoint return value. Disabled unless the Unity Editor was launched " +
+        "with REIFY_ALLOW_SCRIPT_EXECUTE=1. Main-thread execution only.")]
     public static async Task<JsonElement> ScriptExecute(
         UnityClient unity,
         string code,

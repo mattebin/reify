@@ -29,6 +29,11 @@ namespace Reify.Editor.Tools
         [ReifyTool("script-execute")]
         public static Task<object> ScriptExecute(JToken args)
         {
+            if (Environment.GetEnvironmentVariable("REIFY_ALLOW_SCRIPT_EXECUTE") != "1")
+                throw new UnauthorizedAccessException(
+                    "script-execute is disabled. Set REIFY_ALLOW_SCRIPT_EXECUTE=1 " +
+                    "in the Unity Editor environment before launch to enable arbitrary C# execution.");
+
             var code = args?.Value<string>("code") ?? throw new ArgumentException("code is required.");
             var typeName = args?.Value<string>("type_name") ?? "ReifyScriptExecution";
             var methodName = args?.Value<string>("method_name") ?? "Run";

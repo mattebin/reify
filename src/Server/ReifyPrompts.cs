@@ -37,7 +37,7 @@ public static class ReifyPrompts
         sb.AppendLine("- Preserve `read_at_utc`, `frame`, and stable identifiers from every response.");
         sb.AppendLine("- Reject ambiguous identity; qualify by scene/object/component when needed.");
         sb.AppendLine("- Use `structured-screenshot` only if structured-state cannot answer the question.");
-        sb.AppendLine("- Use `reflection-method-call` only as an opt-in escape hatch after native tools fail.");
+        sb.AppendLine("- Use `reflection-method-call` or `script-execute` only as opt-in escape hatches after native tools fail.");
         sb.AppendLine();
         sb.AppendLine($"Available high-level domains: {domains}.");
         sb.AppendLine();
@@ -76,7 +76,7 @@ public static class ReifyPrompts
         sb.AppendLine("3. Perform the smallest write that can achieve the change.");
         sb.AppendLine("4. Read back the exact fields or objects that should have changed.");
         sb.AppendLine("5. Compare expected vs actual result using returned evidence, not screenshots.");
-        sb.AppendLine("6. If native tools cannot express the last missing step, consider reflection only if explicitly enabled.");
+        sb.AppendLine("6. If native tools cannot express the last missing step, consider reflection or script execution only if explicitly enabled.");
         sb.AppendLine();
         sb.AppendLine("When producing the answer, separate:");
         sb.AppendLine("- preflight reads");
@@ -91,7 +91,7 @@ public static class ReifyPrompts
         "Choose the right escalation path for a task when native coverage is " +
         "uncertain. Args: task, optional missing_capability. Orders the " +
         "fallbacks from native tools to batch reads to screenshots to " +
-        "reflection, with philosophy-aware guardrails.")]
+        "reflection/script execution, with philosophy-aware guardrails.")]
     public static string CapabilityEscalation(string task, string? missingCapability = null)
     {
         var sb = new StringBuilder();
@@ -108,8 +108,8 @@ public static class ReifyPrompts
         sb.AppendLine("1. Native reify read/write tools.");
         sb.AppendLine("2. `batch-execute` to compose multiple native reads/writes efficiently.");
         sb.AppendLine("3. `structured-screenshot` only if the answer is truly visual.");
-        sb.AppendLine("4. `reflection-method-find` to discover a narrow escape hatch.");
-        sb.AppendLine("5. `reflection-method-call` only if enabled and only for the missing edge.");
+        sb.AppendLine("4. `reflection-method-find` to discover a narrow reflection escape hatch.");
+        sb.AppendLine("5. `reflection-method-call` or `script-execute` only if enabled and only for the missing edge.");
         sb.AppendLine();
         sb.AppendLine("For the answer:");
         sb.AppendLine("- explain why each earlier level is sufficient or insufficient");

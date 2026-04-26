@@ -82,8 +82,8 @@ public static class MetaBatchServerTools
 
     [McpServerTool(Name = "reflection-method-call"), Description(
         "Invoke a method via reflection - the 'anything reify doesn't " +
-        "expose natively' escape hatch. DISABLED BY DEFAULT: set the " +
-        "server env var REIFY_ALLOW_REFLECTION_CALL=1 to enable. Args: " +
+        "expose natively' escape hatch. DISABLED BY DEFAULT: launch the " +
+        "Unity Editor with REIFY_ALLOW_REFLECTION_CALL=1 to enable. Args: " +
         "type_name, method_name, optional parameter_types[] (FQNs) to " +
         "disambiguate overloads, arguments[] (JSON-coerced to each " +
         "parameter's type), instance_id (required for non-static methods). " +

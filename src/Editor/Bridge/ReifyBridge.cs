@@ -231,6 +231,11 @@ namespace Reify.Editor.Bridge
                     await WriteError(ctx, 400, "INVALID_ARGS", ex.Message);
                     return;
                 }
+                catch (UnauthorizedAccessException ex)
+                {
+                    await WriteError(ctx, 403, "UNSAFE_TOOL_DISABLED", ex.Message);
+                    return;
+                }
                 catch (Exception ex)
                 {
                     await WriteError(ctx, 500, "TOOL_EXCEPTION", ex.Message);

@@ -1,10 +1,8 @@
 {
   "mcpServers": {
     "reify": {
-      "command": "C:\\Program Files\\dotnet\\dotnet.exe",
-      "args": [
-        "<PATH_TO_REIFY>\\src\\Server\\bin\\Release\\net8.0\\reify-server.dll"
-      ],
+      "command": "<PATH_TO_REIFY>\\dist\\reify-server\\reify-server.exe",
+      "args": [],
       "env": {
         "REIFY_BRIDGE_PORT": "17777"
       }

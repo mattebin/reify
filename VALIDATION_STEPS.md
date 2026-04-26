@@ -77,6 +77,8 @@ Try:
 
 - `UNKNOWN_TOOL`: wrong tool name
 - `UNITY_UNREACHABLE`: Unity closed or bridge not running
+- `UNSAFE_TOOL_DISABLED`: an escape hatch such as `script-execute` or
+  `reflection-method-call` is available but not explicitly enabled
 - connection refused: Unity still compiling or wrong port
 - timeout: Unity main thread blocked or editor mid-refresh
 

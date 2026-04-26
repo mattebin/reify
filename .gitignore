@@ -47,6 +47,7 @@ venv/
 
 # Local scratch
 .scratch/
+dist/
 TODO.local.md
 scratch-build/
 

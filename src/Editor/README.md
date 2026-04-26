@@ -72,11 +72,16 @@ in the repo root:
 - `windsurf.mcp.json` - Windsurf
 - `vscode-mcp.json` - VS Code MCP (Copilot Agents)
 
-Each expects the published `reify-server.dll` - build it from `src/Server`:
+The stable configs expect `dist/reify-server/reify-server.exe`. Build it from
+the repo root:
 
 ```powershell
-dotnet build src/Server/Reify.Server.csproj -c Release
+powershell -ExecutionPolicy Bypass -File scripts/build-server.ps1 -Publish
 ```
+
+For validation builds, omit `-Publish`; the helper writes to
+`.scratch/server-build/<timestamp>` so active MCP clients do not lock the
+normal output during development.
 
 ## Dependencies
 
@@ -102,6 +107,9 @@ runs without them.
 - `REIFY_ALLOW_REFLECTION_CALL` - set to `1` to enable the
   `reflection-method-call` escape hatch. Disabled by default since it
   can invoke arbitrary .NET methods.
+- `REIFY_ALLOW_SCRIPT_EXECUTE` - set to `1` before launching Unity to
+  enable `script-execute`. Disabled by default since it compiles and runs
+  arbitrary C# inside the Editor.
 
 ## What's included
 
@@ -136,6 +144,7 @@ MCP extras:
 | Tool returns `UNKNOWN_TOOL` | Stale Editor assembly | Focus Unity to force recompile |
 | `RESPONSE_TOO_LARGE` | One tool returned too much JSON for safe transport | Narrow the query, use pagination, or raise `REIFY_MAX_RESPONSE_BYTES` |
 | Timeout after 30 s | Unity main thread blocked | Dismiss modal dialogs; wait for import to finish |
+| Local build fails with locked DLL | A client is running an old in-place server binary | Run `scripts/build-server.ps1` for scratch builds or `scripts/stop-reify-servers.ps1` before republishing in place |
 
 ## License
 

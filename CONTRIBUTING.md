@@ -64,8 +64,7 @@ package.
 Build the server (avoids DLL lock on a running `reify-server.dll`):
 
 ```powershell
-dotnet build src/Server/Reify.Server.csproj -c Release `
-  -o "$env:TEMP\reify-scratch-build"
+powershell -ExecutionPolicy Bypass -File scripts/build-server.ps1
 ```
 
 Then focus the Unity Editor once to force a recompile of the Editor
@@ -105,6 +104,8 @@ apart from a generic Unity MCP.
 - Screenshot-first tools (we ship one, and it is the explicit escape
   hatch).
 - Tools that wrap arbitrary reflection without `REIFY_ALLOW_REFLECTION_CALL`.
+- Tools that compile or execute arbitrary code without
+  `REIFY_ALLOW_SCRIPT_EXECUTE`.
 - Tools that expand the MCP surface without adding evidence to the
   response.
 - Any dependency that forces the package onto a specific render pipeline,

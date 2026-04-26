@@ -142,8 +142,8 @@ def test_script_inspect_has_roslyn_evidence():
 
 
 def test_script_execute_smoke():
-    """script-execute compiles and runs a parameterless static entrypoint."""
-    d = ok(call("script-execute", {
+    """script-execute is gated by default; if enabled, it runs a tiny entrypoint."""
+    envelope = call("script-execute", {
         "code": (
             "using UnityEngine;\n"
             "public static class ReifyScriptExecution\n"
@@ -154,7 +154,13 @@ def test_script_execute_smoke():
             "    }\n"
             "}\n"
         )
-    }))
+    })
+    if not envelope.get("ok"):
+        assert envelope["error"]["code"] == "UNSAFE_TOOL_DISABLED", envelope
+        assert "REIFY_ALLOW_SCRIPT_EXECUTE" in envelope["error"]["message"]
+        return
+
+    d = ok(envelope)
     assert d["executed"] is True
     assert d["compile_succeeded"] is True
     assert d["return_value"].endswith(":7")

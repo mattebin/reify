@@ -157,7 +157,7 @@ namespace Reify.Editor.Tools
                 case SerializedPropertyType.Enum:       return new { index = p.enumValueIndex, name = p.enumDisplayNames[Math.Clamp(p.enumValueIndex, 0, p.enumDisplayNames.Length - 1)] };
                 case SerializedPropertyType.ObjectReference:
                     var o = p.objectReferenceValue;
-                    return o == null ? null : new { name = o.name, type = o.GetType().FullName, instance_id = o.GetInstanceID() };
+                    return o == null ? null : new { name = o.name, type = o.GetType().FullName, instance_id = GameObjectResolver.InstanceIdOf(o) };
                 default: return $"<unsupported:{p.propertyType}>";
             }
         }

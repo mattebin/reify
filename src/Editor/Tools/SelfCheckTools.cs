@@ -89,6 +89,52 @@ namespace Reify.Editor.Tools
                         throw new InvalidOperationException($"only {count} tools registered — expected 150+");
                     return new { tool_count = count };
                 });
+                Check("editor_state", () =>
+                {
+                    var isCompiling = EditorApplication.isCompiling;
+                    var isUpdating = EditorApplication.isUpdating;
+                    var compileFailed = EditorUtility.scriptCompilationFailed;
+                    if (compileFailed)
+                        throw new InvalidOperationException("Unity reports script compilation failed.");
+                    if (isCompiling || isUpdating)
+                        throw new InvalidOperationException("Unity is compiling or updating; retry when idle.");
+
+                    return new
+                    {
+                        is_compiling = isCompiling,
+                        is_updating = isUpdating,
+                        is_playing = EditorApplication.isPlaying,
+                        is_paused = EditorApplication.isPaused,
+                        script_compilation_failed = compileFailed,
+                        ready = true
+                    };
+                });
+                Check("response_size_cap_config", () =>
+                {
+                    const int defaultCap = 786432;
+                    var raw = Environment.GetEnvironmentVariable("REIFY_MAX_RESPONSE_BYTES");
+                    var parsed = int.TryParse(raw, out var value) && value > 16384
+                        ? value
+                        : defaultCap;
+                    return new
+                    {
+                        env_value = raw,
+                        effective_max_response_bytes = parsed,
+                        default_max_response_bytes = defaultCap,
+                        minimum_accepted_override_bytes = 16385
+                    };
+                });
+                Check("unsafe_tool_gates", () => new
+                {
+                    script_execute = ProbeUnsafeGate(
+                        "script-execute",
+                        "REIFY_ALLOW_SCRIPT_EXECUTE",
+                        new JObject()),
+                    reflection_method_call = ProbeUnsafeGate(
+                        "reflection-method-call",
+                        "REIFY_ALLOW_REFLECTION_CALL",
+                        new JObject())
+                });
 
                 // ---- resolver round-trip ----
                 string tempName = $"__reify_selfcheck_{Guid.NewGuid():N}".Substring(0, 28);
@@ -112,7 +158,7 @@ namespace Reify.Editor.Tools
                     {
                         createdGo = new GameObject(tempName);
                         Undo.RegisterCreatedObjectUndo(createdGo, "reify self-check create");
-                        return new { instance_id = createdGo.GetInstanceID(), name = createdGo.name };
+                        return new { instance_id = GameObjectResolver.InstanceIdOf(createdGo), name = createdGo.name };
                     });
 
                     Check("write_modify_transform", () =>
@@ -177,6 +223,53 @@ namespace Reify.Editor.Tools
                     frame       = (long)Time.frameCount
                 };
             });
+        }
+
+        private static object ProbeUnsafeGate(string toolName, string envVar, JToken args)
+        {
+            var enabled = Environment.GetEnvironmentVariable(envVar) == "1";
+
+            if (!ReifyBridge.TryGetHandler(toolName, out var handler))
+                throw new InvalidOperationException($"{toolName} is not registered.");
+
+            try
+            {
+                handler(args).GetAwaiter().GetResult();
+                if (!enabled)
+                    throw new InvalidOperationException($"{toolName} ran even though {envVar} is not set.");
+
+                return new
+                {
+                    enabled = true,
+                    registered = true,
+                    gate_verified = false,
+                    note = "Tool is enabled in this Unity Editor process; self-check did not execute arbitrary code."
+                };
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                if (enabled)
+                    throw new InvalidOperationException($"{toolName} is disabled even though {envVar}=1.", ex);
+
+                return new
+                {
+                    enabled = false,
+                    registered = true,
+                    gate_verified = true,
+                    expected_error_code = "UNSAFE_TOOL_DISABLED",
+                    message = ex.Message
+                };
+            }
+            catch (ArgumentException ex) when (enabled)
+            {
+                return new
+                {
+                    enabled = true,
+                    registered = true,
+                    gate_verified = false,
+                    note = $"Tool is enabled; argument validation fired before any arbitrary work: {ex.Message}"
+                };
+            }
         }
     }
 }

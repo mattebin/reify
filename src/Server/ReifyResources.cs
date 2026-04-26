@@ -42,7 +42,7 @@ public static class ReifyResources
            - Verify writes by reading back the resulting state.
            - Use `batch-execute` to collect related evidence in one round trip.
            - Treat `structured-screenshot` as an opt-in escape hatch, not the default.
-           - Treat `reflection-method-call` as a last resort and only when explicitly enabled.
+           - Treat `reflection-method-call` and `script-execute` as last resorts and only when explicitly enabled.
 
            The goal is not "make Unity clickable through MCP". The goal is "make Unity inspectable and operable through evidence that an LLM can actually reason about."
            """;
@@ -136,10 +136,11 @@ public static class ReifyResources
 
            ## When to break the discipline
 
-           There is one escape hatch (`structured-screenshot`) and one
-           explicit opt-in (`reflection-method-call`). Both are for cases
-           the evidence surface genuinely does not cover yet. "I'm in a
-           hurry" is not one of those cases.
+           There is one visual escape hatch (`structured-screenshot`) and
+           two arbitrary-execution opt-ins (`reflection-method-call` and
+           `script-execute`). They are for cases the evidence surface
+           genuinely does not cover yet. "I'm in a hurry" is not one of
+           those cases.
            """;
 
     [McpServerResource(

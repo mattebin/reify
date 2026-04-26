@@ -97,9 +97,19 @@ Every tool call is a JSON request to `/tool` on the bridge. Every read returns e
 ```bash
 git clone https://github.com/mattebin/reify.git
 cd reify
-dotnet build src/Server/Reify.Server.csproj -c Release
+powershell -ExecutionPolicy Bypass -File scripts/build-server.ps1
 ```
 Add the Unity package via a `file:` reference (see `client-config/README.md` for `<PATH_TO_REIFY>` substitution).
+
+For MCP clients, prefer a published server:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build-server.ps1 -Publish
+powershell -ExecutionPolicy Bypass -File scripts/install-client-config.ps1 -Client claude
+```
+
+Normal validation builds go to `.scratch/server-build/<timestamp>` so they do
+not fight a running client. Published client builds go to `dist/reify-server`.
 
 ### Verify the install
 
@@ -126,7 +136,7 @@ Call `reify-tool-list` for the live list. A sampling:
 | **Rendering / graphics** | `shader-inspect`, `shader-graph-inspect`, `render-queue-audit`, `lighting-diagnostic`, `camera-inspect`, `light-inspect`, `structured-screenshot` (escape hatch) |
 | **Animation + VFX** | `animation-clip-inspect`, `animation-clip-events-read/set`, `animator-state`, `animator-parameter-set`, `animator-crossfade`, `particle-system-inspect`, `particle-play/stop/simulate`, `visual-effect-inspect`, `timeline-director-*` |
 | **Physics** | `physics-raycast`, `physics-spherecast`, `physics-overlap-*`, `physics-settings`, 2D variants |
-| **Scripts (Roslyn-backed)** | `script-inspect`, `script-execute`, `script-update-or-create`, `script-delete` |
+| **Scripts (Roslyn-backed)** | `script-inspect`, `script-execute` (explicit opt-in), `script-update-or-create`, `script-delete` |
 | **Async jobs** | `tests-run`, `tests-status`, `tests-results`, `build-execute-job`, `asset-refresh-job`, `addressables-build-job`, `job-list`, `job-cancel` |
 | **Remote Unity control** | `editor-request-script-compilation` (compile + domain reload without alt-tabbing), `editor-menu-execute`, `editor-selection-set` |
 | **Issue reporting** | `reify-log-issue`, `reify-list-pending-issues` (see below) |
@@ -219,6 +229,7 @@ Runs ping, read-evidence shape, write-receipt shape (ADR-002), error code discri
 - **Package-gated tools fail gracefully.** Addressables / Cinemachine / Timeline / VFX Graph / TextMeshPro / MPPM tools return a structured "package not installed" error when the package is absent, not an NRE.
 - **Unity version drift is a real risk.** Frame Debugger is currently broken on Unity 6 because the API moved (file an issue — `reify-log-issue`-reported ones land cleanly). Reflection-based tools scan all loaded assemblies to survive most assembly renames, but nothing is bulletproof.
 - **The bridge is localhost-only.** No auth, because `127.0.0.1:17777` is not exposed. Don't run reify on a shared machine where untrusted local processes could hit the port.
+- **Arbitrary execution is gated.** `script-execute` requires launching Unity with `REIFY_ALLOW_SCRIPT_EXECUTE=1`; `reflection-method-call` requires `REIFY_ALLOW_REFLECTION_CALL=1`.
 - **If you find reify ignoring your args or silently succeeding**, that's the bug ADR-002 was written to prevent. File a `reify-log-issue`.
 
 ## Architecture

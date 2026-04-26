@@ -36,7 +36,8 @@ Unity backend, not as a screenshot-first Unity assistant.
    or `Assets/Refresh` runs. Do not chase ghost errors before a refresh.
 8. Use `structured-screenshot` only if structured-state cannot answer the
    question.
-9. Use `reflection-method-call` only as an explicit opt-in escape hatch.
+9. Use `reflection-method-call` and `script-execute` only as explicit opt-in
+   escape hatches.
 10. After mutations, verify by reading back through the same Unity code path.
 11. For spatial/layout claims, use geometry evidence before concluding
     something "looks right":

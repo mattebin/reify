@@ -198,7 +198,7 @@ public static class IterationLoopServerTools
     public static async Task<JsonElement> ReifyHealth(UnityClient unity, CancellationToken ct = default
     ) => await unity.CallAsync<JsonElement>("reify-health", null, ct);
 
-    [McpServerTool(Name = "reify-self-check"), Description("Run Reify's built-in self-check suite.")]
+    [McpServerTool(Name = "reify-self-check"), Description("Run Reify's built-in self-check suite, including editor readiness, tool registry, response cap config, unsafe-tool gates, and optional write receipt checks.")]
     public static async Task<JsonElement> ReifySelfCheck(UnityClient unity, bool? skip_writes = null, CancellationToken ct = default
     ) => await unity.CallAsync<JsonElement>("reify-self-check", new { skip_writes }, ct);
 
